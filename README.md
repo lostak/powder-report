@@ -17,3 +17,7 @@ Secrets: `SLACK_WEBHOOK_URL`, `DISCORD_WEBHOOK_URL`.
 
 A full snow report (every mountain, 7 days, overnight totals) posts every morning at 6 AM, or on demand:
 `gh workflow run powder-report.yml -R lostak/powder-report --ref main -f report=true` (Pocket: "personal snow report").
+
+With `GCAL_SA_KEY` + `GCAL_CALENDAR_ID` set (a Google service account the calendar is shared with), the mountains come from
+the `PASSES:` / `MOUNTAINS:` lines of the app's silent **"Personal: life settings"** event, and alerts also become
+"Personal: powder alert – …" / "Personal: powder day – …" calendar events for the app and the morning brief.
