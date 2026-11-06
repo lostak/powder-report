@@ -1,6 +1,844 @@
 {
- "grid": {},
+ "grid": {
+  "39.8736,-105.7738": "https://api.weather.gov/gridpoints/BOU/36,70",
+  "39.487,-106.15": "https://api.weather.gov/gridpoints/BOU/22,53",
+  "39.634,-105.87": "https://api.weather.gov/gridpoints/BOU/32,59",
+  "39.94,-105.59": "https://api.weather.gov/gridpoints/BOU/43,72",
+  "40.445,-106.77": "https://api.weather.gov/gridpoints/GJT/163,158",
+  "39.19,-106.95": "https://api.weather.gov/gridpoints/GJT/152,102"
+ },
  "alerts": {},
  "powderDays": {},
- "snotel": null
+ "snotel": {
+  "at": 1794001846721,
+  "list": [
+   {
+    "id": "1344:CO:SNTL",
+    "name": "Alta Lakes",
+    "lat": 37.88929,
+    "lng": -107.84484,
+    "elev": 11290
+   },
+   {
+    "id": "303:CO:SNTL",
+    "name": "Apishapa",
+    "lat": 37.33067,
+    "lng": -105.06766,
+    "elev": 10000
+   },
+   {
+    "id": "1030:CO:SNTL",
+    "name": "Arapaho Ridge",
+    "lat": 40.35098,
+    "lng": -106.38141,
+    "elev": 10960
+   },
+   {
+    "id": "322:CO:SNTL",
+    "name": "Bear Lake",
+    "lat": 40.31176,
+    "lng": -105.6467,
+    "elev": 9490
+   },
+   {
+    "id": "1061:CO:SNTL",
+    "name": "Bear River",
+    "lat": 40.06152,
+    "lng": -107.00948,
+    "elev": 9100
+   },
+   {
+    "id": "327:CO:SNTL",
+    "name": "Beartown",
+    "lat": 37.71433,
+    "lng": -107.5124,
+    "elev": 11580
+   },
+   {
+    "id": "1041:CO:SNTL",
+    "name": "Beaver Ck Village",
+    "lat": 39.59871,
+    "lng": -106.51113,
+    "elev": 8530
+   },
+   {
+    "id": "335:CO:SNTL",
+    "name": "Berthoud Summit",
+    "lat": 39.80364,
+    "lng": -105.77786,
+    "elev": 11300
+   },
+   {
+    "id": "345:CO:SNTL",
+    "name": "Bison Lake",
+    "lat": 39.76458,
+    "lng": -107.35628,
+    "elev": 10950
+   },
+   {
+    "id": "1185:CO:SNTL",
+    "name": "Black Mesa",
+    "lat": 37.78968,
+    "lng": -108.18376,
+    "elev": 11580
+   },
+   {
+    "id": "1161:CO:SNTL",
+    "name": "Black Mountain",
+    "lat": 40.8879,
+    "lng": -105.66404,
+    "elev": 8940
+   },
+   {
+    "id": "369:CO:SNTL",
+    "name": "Brumley",
+    "lat": 39.08758,
+    "lng": -106.54231,
+    "elev": 10570
+   },
+   {
+    "id": "938:CO:SNTL",
+    "name": "Buckskin Joe",
+    "lat": 39.30378,
+    "lng": -106.11316,
+    "elev": 11160
+   },
+   {
+    "id": "913:CO:SNTL",
+    "name": "Buffalo Park",
+    "lat": 40.22838,
+    "lng": -106.5962,
+    "elev": 9240
+   },
+   {
+    "id": "378:CO:SNTL",
+    "name": "Burro Mountain",
+    "lat": 39.87504,
+    "lng": -107.59902,
+    "elev": 9290
+   },
+   {
+    "id": "380:CO:SNTL",
+    "name": "Butte",
+    "lat": 38.89435,
+    "lng": -106.95327,
+    "elev": 10190
+   },
+   {
+    "id": "387:CO:SNTL",
+    "name": "Cascade #2",
+    "lat": 37.65751,
+    "lng": -107.80287,
+    "elev": 8990
+   },
+   {
+    "id": "1326:CO:SNTL",
+    "name": "Castle Peak",
+    "lat": 39.00074,
+    "lng": -106.83912,
+    "elev": 11510
+   },
+   {
+    "id": "1101:CO:SNTL",
+    "name": "Chapman Tunnel",
+    "lat": 39.2621,
+    "lng": -106.62944,
+    "elev": 10090
+   },
+   {
+    "id": "1059:CO:SNTL",
+    "name": "Cochetopa Pass",
+    "lat": 38.16273,
+    "lng": -106.5988,
+    "elev": 10020
+   },
+   {
+    "id": "408:CO:SNTL",
+    "name": "Columbine",
+    "lat": 40.39591,
+    "lng": -106.60437,
+    "elev": 9170
+   },
+   {
+    "id": "409:CO:SNTL",
+    "name": "Columbine Pass",
+    "lat": 38.41819,
+    "lng": -108.38313,
+    "elev": 9160
+   },
+   {
+    "id": "904:CO:SNTL",
+    "name": "Columbus Basin",
+    "lat": 37.44146,
+    "lng": -108.02468,
+    "elev": 10780
+   },
+   {
+    "id": "412:CO:SNTL",
+    "name": "Copeland Lake",
+    "lat": 40.20733,
+    "lng": -105.5695,
+    "elev": 8570
+   },
+   {
+    "id": "415:CO:SNTL",
+    "name": "Copper Mountain",
+    "lat": 39.48917,
+    "lng": -106.17154,
+    "elev": 10500
+   },
+   {
+    "id": "426:CO:SNTL",
+    "name": "Crosho",
+    "lat": 40.16749,
+    "lng": -107.05769,
+    "elev": 8960
+   },
+   {
+    "id": "430:CO:SNTL",
+    "name": "Culebra #2",
+    "lat": 37.20939,
+    "lng": -105.19988,
+    "elev": 10560
+   },
+   {
+    "id": "431:CO:SNTL",
+    "name": "Cumbres Trestle",
+    "lat": 37.01877,
+    "lng": -106.45275,
+    "elev": 10030
+   },
+   {
+    "id": "438:CO:SNTL",
+    "name": "Deadman Hill",
+    "lat": 40.80572,
+    "lng": -105.77018,
+    "elev": 10240
+   },
+   {
+    "id": "457:CO:SNTL",
+    "name": "Dry Lake",
+    "lat": 40.5337,
+    "lng": -106.7814,
+    "elev": 8240
+   },
+   {
+    "id": "936:CO:SNTL",
+    "name": "Echo Lake",
+    "lat": 39.65539,
+    "lng": -105.59358,
+    "elev": 10660
+   },
+   {
+    "id": "465:CO:SNTL",
+    "name": "El Diente Peak",
+    "lat": 37.78607,
+    "lng": -108.02235,
+    "elev": 10210
+   },
+   {
+    "id": "467:CO:SNTL",
+    "name": "Elk River",
+    "lat": 40.84758,
+    "lng": -106.96861,
+    "elev": 8710
+   },
+   {
+    "id": "1252:CO:SNTL",
+    "name": "Elkhead Divide",
+    "lat": 40.79637,
+    "lng": -107.10113,
+    "elev": 8780
+   },
+   {
+    "id": "1120:CO:SNTL",
+    "name": "Elliot Ridge",
+    "lat": 39.8638,
+    "lng": -106.42473,
+    "elev": 10550
+   },
+   {
+    "id": "1325:CO:SNTL",
+    "name": "Elwood Pass",
+    "lat": 37.40563,
+    "lng": -106.64136,
+    "elev": 11680
+   },
+   {
+    "id": "1186:CO:SNTL",
+    "name": "Fool Creek",
+    "lat": 39.86866,
+    "lng": -105.86765,
+    "elev": 11130
+   },
+   {
+    "id": "485:CO:SNTL",
+    "name": "Fremont Pass",
+    "lat": 39.38014,
+    "lng": -106.19784,
+    "elev": 11310
+   },
+   {
+    "id": "1057:CO:SNTL",
+    "name": "Glen Cove",
+    "lat": 38.87602,
+    "lng": -105.07605,
+    "elev": 11410
+   },
+   {
+    "id": "1058:CO:SNTL",
+    "name": "Grayback",
+    "lat": 37.47051,
+    "lng": -106.5379,
+    "elev": 11620
+   },
+   {
+    "id": "505:CO:SNTL",
+    "name": "Grizzly Peak",
+    "lat": 39.64646,
+    "lng": -105.8694,
+    "elev": 11110
+   },
+   {
+    "id": "1102:CO:SNTL",
+    "name": "Hayden Pass",
+    "lat": 38.29303,
+    "lng": -105.85027,
+    "elev": 10700
+   },
+   {
+    "id": "1187:CO:SNTL",
+    "name": "High Lonesome",
+    "lat": 40.0359,
+    "lng": -105.75472,
+    "elev": 10630
+   },
+   {
+    "id": "531:CO:SNTL",
+    "name": "Hoosier Pass",
+    "lat": 39.36092,
+    "lng": -106.05999,
+    "elev": 11600
+   },
+   {
+    "id": "1122:CO:SNTL",
+    "name": "Hourglass Lake",
+    "lat": 40.57717,
+    "lng": -105.62584,
+    "elev": 9380
+   },
+   {
+    "id": "538:CO:SNTL",
+    "name": "Idarado",
+    "lat": 37.93389,
+    "lng": -107.6762,
+    "elev": 9780
+   },
+   {
+    "id": "542:CO:SNTL",
+    "name": "Independence Pass",
+    "lat": 39.07543,
+    "lng": -106.61154,
+    "elev": 10570
+   },
+   {
+    "id": "547:CO:SNTL",
+    "name": "Ivanhoe",
+    "lat": 39.29228,
+    "lng": -106.54907,
+    "elev": 10540
+   },
+   {
+    "id": "935:CO:SNTL",
+    "name": "Jackwhacker Gulch",
+    "lat": 39.57096,
+    "lng": -105.80355,
+    "elev": 11030
+   },
+   {
+    "id": "551:CO:SNTL",
+    "name": "Joe Wright",
+    "lat": 40.53285,
+    "lng": -105.88747,
+    "elev": 10140
+   },
+   {
+    "id": "970:CO:SNTL",
+    "name": "Jones Pass",
+    "lat": 39.7645,
+    "lng": -105.90655,
+    "elev": 10430
+   },
+   {
+    "id": "556:CO:SNTL",
+    "name": "Kiln",
+    "lat": 39.3172,
+    "lng": -106.61501,
+    "elev": 9610
+   },
+   {
+    "id": "564:CO:SNTL",
+    "name": "Lake Eldora",
+    "lat": 39.93659,
+    "lng": -105.59031,
+    "elev": 9700
+   },
+   {
+    "id": "565:CO:SNTL",
+    "name": "Lake Irene",
+    "lat": 40.41446,
+    "lng": -105.81941,
+    "elev": 10680
+   },
+   {
+    "id": "580:CO:SNTL",
+    "name": "Lily Pond",
+    "lat": 37.38028,
+    "lng": -106.54823,
+    "elev": 11070
+   },
+   {
+    "id": "586:CO:SNTL",
+    "name": "Lizard Head Pass",
+    "lat": 37.79895,
+    "lng": -107.92475,
+    "elev": 10190
+   },
+   {
+    "id": "589:CO:SNTL",
+    "name": "Lone Cone",
+    "lat": 37.89169,
+    "lng": -108.19636,
+    "elev": 9730
+   },
+   {
+    "id": "1123:CO:SNTL",
+    "name": "Long Draw Resv",
+    "lat": 40.51154,
+    "lng": -105.7654,
+    "elev": 9980
+   },
+   {
+    "id": "940:CO:SNTL",
+    "name": "Lost Dog",
+    "lat": 40.81557,
+    "lng": -106.74833,
+    "elev": 9350
+   },
+   {
+    "id": "602:CO:SNTL",
+    "name": "Loveland Basin",
+    "lat": 39.67428,
+    "lng": -105.90264,
+    "elev": 11410
+   },
+   {
+    "id": "607:CO:SNTL",
+    "name": "Lynx Pass",
+    "lat": 40.07832,
+    "lng": -106.67095,
+    "elev": 8910
+   },
+   {
+    "id": "905:CO:SNTL",
+    "name": "Mancos",
+    "lat": 37.43109,
+    "lng": -108.17005,
+    "elev": 10020
+   },
+   {
+    "id": "618:CO:SNTL",
+    "name": "Mc Clure Pass",
+    "lat": 39.12899,
+    "lng": -107.28834,
+    "elev": 8760
+   },
+   {
+    "id": "1040:CO:SNTL",
+    "name": "Mccoy Park",
+    "lat": 39.60231,
+    "lng": -106.544,
+    "elev": 9500
+   },
+   {
+    "id": "914:CO:SNTL",
+    "name": "Medano Pass",
+    "lat": 37.85192,
+    "lng": -105.43666,
+    "elev": 9650
+   },
+   {
+    "id": "622:CO:SNTL",
+    "name": "Mesa Lakes",
+    "lat": 39.05738,
+    "lng": -108.05756,
+    "elev": 10160
+   },
+   {
+    "id": "937:CO:SNTL",
+    "name": "Michigan Creek",
+    "lat": 39.43579,
+    "lng": -105.91072,
+    "elev": 10700
+   },
+   {
+    "id": "624:CO:SNTL",
+    "name": "Middle Creek",
+    "lat": 37.61779,
+    "lng": -107.03932,
+    "elev": 11260
+   },
+   {
+    "id": "1014:CO:SNTL",
+    "name": "Middle Fork Camp",
+    "lat": 39.79565,
+    "lng": -106.02802,
+    "elev": 8960
+   },
+   {
+    "id": "629:CO:SNTL",
+    "name": "Mineral Creek",
+    "lat": 37.84737,
+    "lng": -107.72657,
+    "elev": 10030
+   },
+   {
+    "id": "632:CO:SNTL",
+    "name": "Molas Lake",
+    "lat": 37.74929,
+    "lng": -107.68933,
+    "elev": 10610
+   },
+   {
+    "id": "1124:CO:SNTL",
+    "name": "Moon Pass",
+    "lat": 37.96627,
+    "lng": -106.55857,
+    "elev": 11110
+   },
+   {
+    "id": "658:CO:SNTL",
+    "name": "Nast Lake",
+    "lat": 39.29695,
+    "lng": -106.60786,
+    "elev": 8710
+   },
+   {
+    "id": "1031:CO:SNTL",
+    "name": "Never Summer",
+    "lat": 40.40392,
+    "lng": -105.95567,
+    "elev": 10300
+   },
+   {
+    "id": "663:CO:SNTL",
+    "name": "Niwot",
+    "lat": 40.03581,
+    "lng": -105.5452,
+    "elev": 9940
+   },
+   {
+    "id": "669:CO:SNTL",
+    "name": "North Lost Trail",
+    "lat": 39.07818,
+    "lng": -107.14388,
+    "elev": 9190
+   },
+   {
+    "id": "675:CO:SNTL",
+    "name": "Overland Res.",
+    "lat": 39.09035,
+    "lng": -107.63583,
+    "elev": 9890
+   },
+   {
+    "id": "680:CO:SNTL",
+    "name": "Park Cone",
+    "lat": 38.81982,
+    "lng": -106.58962,
+    "elev": 9600
+   },
+   {
+    "id": "682:CO:SNTL",
+    "name": "Park Reservoir",
+    "lat": 39.04433,
+    "lng": -107.87951,
+    "elev": 9990
+   },
+   {
+    "id": "688:CO:SNTL",
+    "name": "Phantom Valley",
+    "lat": 40.39803,
+    "lng": -105.84606,
+    "elev": 9030
+   },
+   {
+    "id": "701:CO:SNTL",
+    "name": "Porphyry Creek",
+    "lat": 38.48864,
+    "lng": -106.33967,
+    "elev": 10790
+   },
+   {
+    "id": "709:CO:SNTL",
+    "name": "Rabbit Ears",
+    "lat": 40.36735,
+    "lng": -106.74118,
+    "elev": 9390
+   },
+   {
+    "id": "1324:CO:SNTL",
+    "name": "Rat Creek",
+    "lat": 37.93571,
+    "lng": -106.98192,
+    "elev": 11680
+   },
+   {
+    "id": "1032:CO:SNTL",
+    "name": "Rawah",
+    "lat": 40.70794,
+    "lng": -106.00727,
+    "elev": 9100
+   },
+   {
+    "id": "713:CO:SNTL",
+    "name": "Red Mountain Pass",
+    "lat": 37.89168,
+    "lng": -107.71389,
+    "elev": 11060
+   },
+   {
+    "id": "717:CO:SNTL",
+    "name": "Ripple Creek",
+    "lat": 40.10844,
+    "lng": -107.29383,
+    "elev": 10340
+   },
+   {
+    "id": "718:CO:SNTL",
+    "name": "Roach",
+    "lat": 40.87498,
+    "lng": -106.04675,
+    "elev": 9710
+   },
+   {
+    "id": "939:CO:SNTL",
+    "name": "Rough And Tumble",
+    "lat": 39.02611,
+    "lng": -106.08063,
+    "elev": 10420
+   },
+   {
+    "id": "1100:CO:SNTL",
+    "name": "Saint Elmo",
+    "lat": 38.69985,
+    "lng": -106.36805,
+    "elev": 10420
+   },
+   {
+    "id": "1128:CO:SNTL",
+    "name": "Sargents Mesa",
+    "lat": 38.2856,
+    "lng": -106.37085,
+    "elev": 11490
+   },
+   {
+    "id": "1251:CO:SNTL",
+    "name": "Sawtooth",
+    "lat": 40.13632,
+    "lng": -105.58486,
+    "elev": 9640
+   },
+   {
+    "id": "737:CO:SNTL",
+    "name": "Schofield Pass",
+    "lat": 39.01467,
+    "lng": -107.04933,
+    "elev": 10640
+   },
+   {
+    "id": "739:CO:SNTL",
+    "name": "Scotch Creek",
+    "lat": 37.64562,
+    "lng": -108.00833,
+    "elev": 9160
+   },
+   {
+    "id": "1060:CO:SNTL",
+    "name": "Sharkstooth",
+    "lat": 37.50356,
+    "lng": -108.11405,
+    "elev": 10730
+   },
+   {
+    "id": "762:CO:SNTL",
+    "name": "Slumgullion",
+    "lat": 37.99076,
+    "lng": -107.20392,
+    "elev": 11560
+   },
+   {
+    "id": "773:CO:SNTL",
+    "name": "South Colony",
+    "lat": 37.96647,
+    "lng": -105.53671,
+    "elev": 10790
+   },
+   {
+    "id": "780:CO:SNTL",
+    "name": "Spud Mountain",
+    "lat": 37.69883,
+    "lng": -107.77841,
+    "elev": 10660
+   },
+   {
+    "id": "793:CO:SNTL",
+    "name": "Stillwater Creek",
+    "lat": 40.22532,
+    "lng": -105.9198,
+    "elev": 8760
+   },
+   {
+    "id": "797:CO:SNTL",
+    "name": "Stump Lakes",
+    "lat": 37.47647,
+    "lng": -107.63348,
+    "elev": 11230
+   },
+   {
+    "id": "802:CO:SNTL",
+    "name": "Summit Ranch",
+    "lat": 39.71803,
+    "lng": -106.1577,
+    "elev": 9350
+   },
+   {
+    "id": "825:CO:SNTL",
+    "name": "Tower",
+    "lat": 40.5374,
+    "lng": -106.67655,
+    "elev": 10610
+   },
+   {
+    "id": "827:CO:SNTL",
+    "name": "Trapper Lake",
+    "lat": 39.99881,
+    "lng": -107.23618,
+    "elev": 9750
+   },
+   {
+    "id": "829:CO:SNTL",
+    "name": "Trinchera",
+    "lat": 37.35296,
+    "lng": -105.23259,
+    "elev": 10860
+   },
+   {
+    "id": "838:CO:SNTL",
+    "name": "University Camp",
+    "lat": 40.03307,
+    "lng": -105.57562,
+    "elev": 10330
+   },
+   {
+    "id": "839:CO:SNTL",
+    "name": "Upper Rio Grande",
+    "lat": 37.72172,
+    "lng": -107.25971,
+    "elev": 9370
+   },
+   {
+    "id": "840:CO:SNTL",
+    "name": "Upper San Juan",
+    "lat": 37.48563,
+    "lng": -106.83528,
+    "elev": 10140
+   },
+   {
+    "id": "1141:CO:SNTL",
+    "name": "Upper Taylor",
+    "lat": 38.99071,
+    "lng": -106.74504,
+    "elev": 10710
+   },
+   {
+    "id": "1005:CO:SNTL",
+    "name": "Ute Creek",
+    "lat": 37.6148,
+    "lng": -105.37322,
+    "elev": 10720
+   },
+   {
+    "id": "842:CO:SNTL",
+    "name": "Vail Mountain",
+    "lat": 39.61765,
+    "lng": -106.38019,
+    "elev": 10290
+   },
+   {
+    "id": "843:CO:SNTL",
+    "name": "Vallecito",
+    "lat": 37.48524,
+    "lng": -107.50748,
+    "elev": 10740
+   },
+   {
+    "id": "1188:CO:SNTL",
+    "name": "Wager Gulch",
+    "lat": 37.88248,
+    "lng": -107.36428,
+    "elev": 11110
+   },
+   {
+    "id": "1160:CO:SNTL",
+    "name": "Weminuche Creek",
+    "lat": 37.51968,
+    "lng": -107.32139,
+    "elev": 10730
+   },
+   {
+    "id": "857:CO:SNTL",
+    "name": "Whiskey Ck",
+    "lat": 37.21423,
+    "lng": -105.12262,
+    "elev": 10260
+   },
+   {
+    "id": "1042:CO:SNTL",
+    "name": "Wild Basin",
+    "lat": 40.201,
+    "lng": -105.6025,
+    "elev": 9410
+   },
+   {
+    "id": "869:CO:SNTL",
+    "name": "Willow Creek Pass",
+    "lat": 40.34734,
+    "lng": -106.0952,
+    "elev": 9520
+   },
+   {
+    "id": "870:CO:SNTL",
+    "name": "Willow Park",
+    "lat": 40.43397,
+    "lng": -105.73588,
+    "elev": 10710
+   },
+   {
+    "id": "874:CO:SNTL",
+    "name": "Wolf Creek Summit",
+    "lat": 37.47903,
+    "lng": -106.80234,
+    "elev": 10930
+   },
+   {
+    "id": "1033:CO:SNTL",
+    "name": "Zirkel",
+    "lat": 40.79492,
+    "lng": -106.59544,
+    "elev": 9320
+   }
+  ]
+ },
+ "lastReport": "2026-11-06"
 }
