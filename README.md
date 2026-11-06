@@ -14,3 +14,6 @@ Needs the repo secret `SLACK_WEBHOOK_URL` (an incoming webhook to Bradley's own 
 `.github/workflows/notify.yml` is a relay Claude's scheduled tasks use to post to Slack + the Discord powder channel:
 `gh workflow run notify.yml -R lostak/powder-report --ref main -f text="$(cat /tmp/msg.txt)"`.
 Secrets: `SLACK_WEBHOOK_URL`, `DISCORD_WEBHOOK_URL`.
+
+A full snow report (every mountain, 7 days, overnight totals) posts every morning at 6 AM, or on demand:
+`gh workflow run powder-report.yml -R lostak/powder-report --ref main -f report=true` (Pocket: "personal snow report").

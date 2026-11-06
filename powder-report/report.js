@@ -5,6 +5,7 @@ const fs = require('fs');
 const cfg = JSON.parse(fs.readFileSync('mountains.json', 'utf8'));
 const STATE = 'state/state.json';
 const DRY = process.argv.includes('--dry');
+const REPORT = process.argv.includes('--report');   // post the full snow report (every mountain, 7 days + overnight) regardless of thresholds
 const DEBUG = process.argv.includes('--debug') || process.env.DEBUG === '1';
 const TZ = cfg.timezone || 'America/Denver';
 const T = cfg.thresholds, Q = cfg.quietHours;
@@ -132,6 +133,14 @@ async function slack(text) {
     await slack(`🚨 *POWDER DAY – ${top} ${Math.round(o.newSnow)}" OVERNIGHT*\n*Snow stake nearest each mountain (SNOTEL, last 24 h):* ${rows}\n${link}\n_Confirm on the resort's snow report, then go._`);
     state.powderDays[now.date] = { top, in: o.newSnow };
     summary.push(`powder day: ${top} +${rnd(o.newSnow)}"`);
+  }
+  // 2b) full report on demand (Pocket / Discord "snow report") or on the daily schedule
+  if (REPORT) {
+    const days = horizon.slice(0, 7);
+    const rows = mountains.filter(m => fc[m.name]).map(m => `${m.name}: ${days.map(d => `${nice(d).slice(0, 3)} ${rnd(fc[m.name][d] || 0)}`).join(' · ')}${obs[m.name] ? ` | overnight +${rnd(obs[m.name].newSnow)}"` : ''}`);
+    const best = mountains.filter(m => fc[m.name]).map(m => ({ n: m.name, w: (fc[m.name][sat] || 0) + (fc[m.name][sun] || 0) })).sort((a, b) => b.w - a.w)[0];
+    await slack(`❄️ *Snow report – ${nice(now.date)}* (inches, NWS forecast per ski day; overnight from the nearest SNOTEL)\n${rows.join('\n')}\n*Weekend pick:* ${best ? `${best.n} ${rnd(best.w)}" Sat+Sun` : '–'}${errors.length ? `\n(couldn't read: ${errors.map(e => e.split(':')[0]).join(', ')})` : ''}`);
+    summary.push('full report posted');
   }
   // 3) errors (once a day at most)
   if (errors.length && !DRY && process.env.SLACK_WEBHOOK_URL && !Object.keys(fc).length && state.lastErrorDay !== now.date) {

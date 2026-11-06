@@ -6,6 +6,7 @@ on:
     inputs:
       dry: { description: 'Dry run (no Slack, no state)', type: boolean, default: false }
       debug: { description: 'Verbose log', type: boolean, default: false }
+      report: { description: 'Post the full snow report now', type: boolean, default: false }
 concurrency: { group: powder-report, cancel-in-progress: false }
 permissions: { contents: write }
 jobs:
@@ -17,7 +18,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }}
+      - id: gate
+        run: echo "report=$([ "${{ github.event_name }}" = schedule ] && [ "$(TZ=America/Denver date +%H:%M)" \< "06:05" ] && [ "$(TZ=America/Denver date +%H:%M)" \> "05:59" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }} ${{ (inputs.report || steps.gate.outputs.report == 'yes') && '--report' || '' }}
         env: { SLACK_WEBHOOK_URL: '${{ secrets.SLACK_WEBHOOK_URL }}', DISCORD_WEBHOOK_URL: '${{ secrets.DISCORD_WEBHOOK_URL }}' }
       - name: Save state
         if: ${{ !inputs.dry }}
