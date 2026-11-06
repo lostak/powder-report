@@ -1,29 +1,41 @@
 name: powder-report
+# Runs every ~5 minutes around the clock as a self-chaining loop: each run checks, waits out the rest of its
+# 5 minutes, then starts the next run. GitHub's own 5-minute cron is unreliable (often hours late), so cron here only
+# restarts the chain if it ever stops. The 6 AM snow report posts on the first run after 6 AM each day.
 on:
   schedule:
-    - cron: '*/5 * * * *'   # GitHub may delay scheduled runs by a few minutes
+    - cron: '1-56/5 * * * *'
   workflow_dispatch:
     inputs:
       dry: { description: 'Dry run (no Slack, no state)', type: boolean, default: false }
       debug: { description: 'Verbose log', type: boolean, default: false }
       report: { description: 'Post the full snow report now', type: boolean, default: false }
-concurrency: { group: powder-report, cancel-in-progress: false }
-permissions: { contents: write }
+# The loop and manual runs use separate groups so a manual report is never replaced by the loop's next run.
+concurrency: { group: "${{ (inputs.report || inputs.dry || inputs.debug) && 'powder-manual' || 'powder-loop' }}", cancel-in-progress: false }
+permissions: { contents: write, actions: write }
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     defaults: { run: { working-directory: powder-report } }
     steps:
+      - id: t0
+        working-directory: .
+        run: echo "t=$(date +%s)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - id: gate
-        run: echo "report=$([ "${{ github.event_name }}" = schedule ] && [ "$(TZ=America/Denver date +%H:%M)" \< "06:05" ] && [ "$(TZ=America/Denver date +%H:%M)" \> "05:59" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
-      - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }} ${{ (inputs.report || steps.gate.outputs.report == 'yes') && '--report' || '' }}
+      - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }} ${{ inputs.report && '--report' || '' }}
         env: { SLACK_WEBHOOK_URL: '${{ secrets.SLACK_WEBHOOK_URL }}', DISCORD_WEBHOOK_URL: '${{ secrets.DISCORD_WEBHOOK_URL }}', GCAL_SA_KEY: '${{ secrets.GCAL_SA_KEY }}', GCAL_CALENDAR_ID: '${{ secrets.GCAL_CALENDAR_ID }}' }
       - name: Save state
         if: ${{ !inputs.dry }}
         run: |
           git config user.name powder-report && git config user.email powder-report@users.noreply.github.com
           git add state/state.json && (git diff --cached --quiet || (git commit -q -m "powder report: update state" && git pull --rebase -q -X theirs && git push -q))
+      - name: Next run in 5 minutes
+        if: always() && !inputs.dry && !inputs.report && !inputs.debug
+        working-directory: .
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          left=$(( 300 - ($(date +%s) - ${{ steps.t0.outputs.t }}) )); [ "$left" -gt 0 ] && sleep "$left"
+          gh workflow run powder-report.yml -R "$GITHUB_REPOSITORY" --ref main

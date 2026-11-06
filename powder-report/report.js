@@ -153,7 +153,11 @@ async function slack(text) {
     await calEvent(`Personal: powder day – ${top} ${Math.round(o.newSnow)}" overnight`, `${rows}\n${link}\nPOWDER-DAY: ${now.date}\nSource: SNOTEL snow depth change, last 24 h`);
   }
   // 2b) full report on demand (Pocket / Discord "snow report") or on the daily schedule
-  if (REPORT) {
+  // Daily report: the first run after 6 AM each day (robust to late/missed runs), or on demand (--report).
+  const hourNow = +new Date().toLocaleString('en-US', { timeZone: 'America/Denver', hour: 'numeric', hour12: false }) % 24;
+  const dailyDue = !DRY && hourNow >= 6 && hourNow < 21 && state.lastReport !== now.date;
+  if (REPORT || dailyDue) {
+    if (!DRY) state.lastReport = now.date;
     const days = horizon.slice(0, 7);
     const rows = mountains.filter(m => fc[m.name]).map(m => `${m.name}: ${days.map(d => `${nice(d).slice(0, 3)} ${rnd(fc[m.name][d] || 0)}`).join(' · ')}${obs[m.name] ? ` | overnight +${rnd(obs[m.name].newSnow)}"` : ''}`);
     const best = mountains.filter(m => fc[m.name]).map(m => ({ n: m.name, w: (fc[m.name][sat] || 0) + (fc[m.name][sun] || 0) })).sort((a, b) => b.w - a.w)[0];
