@@ -79,12 +79,14 @@ async function overnightSnow(ms) {
   return out;
 }
 
+// Post to Slack (SLACK_WEBHOOK_URL) and Discord (DISCORD_WEBHOOK_URL) when set. Slack *bold* becomes Discord **bold**.
 async function slack(text) {
-  const url = process.env.SLACK_WEBHOOK_URL;
   if (DRY) { log('  (dry) would post:\n' + text.split('\n').map(l => '    ' + l).join('\n')); return; }
-  if (!url) throw new Error('SLACK_WEBHOOK_URL not set');
-  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-  if (!r.ok) throw new Error('Slack post failed ' + r.status);
+  const s = process.env.SLACK_WEBHOOK_URL, d = process.env.DISCORD_WEBHOOK_URL;
+  if (!s && !d) throw new Error('SLACK_WEBHOOK_URL / DISCORD_WEBHOOK_URL not set');
+  const post = async (url, body, name) => { if (!url) return; const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(name + ' post failed ' + r.status); };
+  await post(s, { text }, 'Slack');
+  await post(d, { content: text.replace(/\*([^*\n]+)\*/g, '**$1**').slice(0, 1990) }, 'Discord');
 }
 
 (async () => {
