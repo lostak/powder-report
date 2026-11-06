@@ -1,0 +1,26 @@
+name: powder-report
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # GitHub may delay scheduled runs by a few minutes
+  workflow_dispatch:
+    inputs:
+      dry: { description: 'Dry run (no Slack, no state)', type: boolean, default: false }
+      debug: { description: 'Verbose log', type: boolean, default: false }
+concurrency: { group: powder-report, cancel-in-progress: false }
+permissions: { contents: write }
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults: { run: { working-directory: powder-report } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }}
+        env: { SLACK_WEBHOOK_URL: '${{ secrets.SLACK_WEBHOOK_URL }}' }
+      - name: Save state
+        if: ${{ !inputs.dry }}
+        run: |
+          git config user.name powder-report && git config user.email powder-report@users.noreply.github.com
+          git add state/state.json && (git diff --cached --quiet || (git commit -q -m "powder report: update state" && git pull --rebase -q && git push -q))

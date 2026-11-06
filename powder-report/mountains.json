@@ -1,0 +1,25 @@
+{
+  "timezone": "America/Denver",
+  "passes": ["ikon"],
+  "thresholds": { "bigWeekendInches": 8, "majorWeekdayInches": 12, "reAlertInches": 4, "powderDayInches": 6 },
+  "quietHours": { "forecastFrom": 22, "forecastTo": 6, "powderDayFrom": 22, "powderDayTo": 4.5 },
+  "mountains": [
+    { "name": "Winter Park",     "pass": "ikon",  "lat": 39.8736, "lng": -105.7738, "snowReport": "https://www.winterparkresort.com/the-mountain/mountain-report" },
+    { "name": "Copper",          "pass": "ikon",  "lat": 39.4870, "lng": -106.1500, "snowReport": "https://www.coppercolorado.com/the-mountain/conditions-weather/snow-report" },
+    { "name": "A-Basin",         "pass": "ikon",  "lat": 39.6340, "lng": -105.8700, "snowReport": "https://www.arapahoebasin.com/snow-report/" },
+    { "name": "Eldora",          "pass": "ikon",  "lat": 39.9400, "lng": -105.5900, "snowReport": "https://www.eldora.com/the-mountain/conditions" },
+    { "name": "Steamboat",       "pass": "ikon",  "lat": 40.4450, "lng": -106.7700, "snowReport": "https://www.steamboat.com/the-mountain/mountain-report" },
+    { "name": "Aspen Snowmass",  "pass": "ikon",  "lat": 39.1900, "lng": -106.9500, "snowReport": "https://www.aspensnowmass.com/four-mountains/snow-report" },
+    { "name": "Vail",            "pass": "epic",  "lat": 39.6000, "lng": -106.3800, "snowReport": "https://www.vail.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx" },
+    { "name": "Beaver Creek",    "pass": "epic",  "lat": 39.5900, "lng": -106.5200, "snowReport": "https://www.beavercreek.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx" },
+    { "name": "Breckenridge",    "pass": "epic",  "lat": 39.4700, "lng": -106.0700, "snowReport": "https://www.breckenridge.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx" },
+    { "name": "Keystone",        "pass": "epic",  "lat": 39.5900, "lng": -105.9300, "snowReport": "https://www.keystoneresort.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx" },
+    { "name": "Crested Butte",   "pass": "epic",  "lat": 38.8900, "lng": -106.9650, "snowReport": "https://www.skicb.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx" },
+    { "name": "Loveland",        "pass": "local", "lat": 39.6750, "lng": -105.9000, "snowReport": "https://skiloveland.com/snow-report/" },
+    { "name": "Monarch",         "pass": "local", "lat": 38.5120, "lng": -106.3320, "snowReport": "https://skimonarch.com/snow-report/" },
+    { "name": "Ski Cooper",      "pass": "local", "lat": 39.3610, "lng": -106.3020, "snowReport": "https://www.skicooper.com/snow-report/" },
+    { "name": "Wolf Creek",      "pass": "local", "lat": 37.4730, "lng": -106.7930, "snowReport": "https://wolfcreekski.com/snow-report/" },
+    { "name": "Sunlight",        "pass": "local", "lat": 39.4300, "lng": -107.3390, "snowReport": "https://sunlightmtn.com/mountain/snow-report" },
+    { "name": "Echo Mountain",   "pass": "local", "lat": 39.6845, "lng": -105.5180, "snowReport": "https://echomntn.com/" }
+  ]
+}
