@@ -10,3 +10,7 @@ Every 5 minutes a GitHub Actions job checks the snow at Bradley's ski mountains 
 Edit [`powder-report/mountains.json`](powder-report/mountains.json) to change passes (`ikon`, `epic`, `local`), add `extra` mountains by name, or tune thresholds. State (what has been alerted) is committed to `powder-report/state/state.json`.
 
 Needs the repo secret `SLACK_WEBHOOK_URL` (an incoming webhook to Bradley's own Slack DM). Part of [My Life](https://github.com/lostak/my-life).
+
+`.github/workflows/notify.yml` is a relay Claude's scheduled tasks use to post to Slack + the Discord powder channel:
+`gh workflow run notify.yml -R lostak/powder-report --ref main -f text="$(cat /tmp/msg.txt)"`.
+Secrets: `SLACK_WEBHOOK_URL`, `DISCORD_WEBHOOK_URL`.
