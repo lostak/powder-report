@@ -54,7 +54,7 @@ function bhParseLog(desc) {
       book: p[3] || "", conf: (find(/^(Low|Medium|High)/i).match(/^(Low|Medium|High)(-\w+)?/i) || [""])[0],
       stakeU: slip ? null : parseFloat(stake) || null, stake$: slip ? parseFloat(slipStake) || null : parseFloat((stake.match(/\$(\d+(?:\.\d+)?)/) || [])[1]) || null, placed,
       status, units: isNaN(units) ? null : units, dollars: dm && (slip || placed === "yes") ? (dm[1] === "-" ? -1 : 1) * parseFloat(dm[2]) : slip && /^push/i.test(slipSt) ? 0 : null,
-      clv: /beat close/i.test(close) ? true : /(missed|didn't beat|worse than|lost to) (the )?close/i.test(close) ? false : null,
+      clv: /(did not|didn't|missed|worse than|lost to) (beat )?(the )?close/i.test(close) ? false : /beat (the )?close/i.test(close) ? true : null,
       close: close.replace(/^close:\s*/i, ""), result: slip ? slipSt : res.replace(/^result:\s*/i, ""), sport, start: find(/\d{1,2}:\d{2} [AP]M/) });
   }
   return rows;
