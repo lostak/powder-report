@@ -1,0 +1,50 @@
+{
+  "name": "my-life-desktop",
+  "productName": "My Life",
+  "version": "1.0.0",
+  "description": "Desktop front end for Bradley's Life-project tasks (Google Calendar).",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "sync-web": "echo renderer is synced from the private repo",
+    "dist": "electron-builder --win nsis",
+    "test": "node scripts/test-calendar.js"
+  },
+  "build": {
+    "appId": "com.lostak.mylife",
+    "productName": "My Life",
+    "files": [
+      "main.js",
+      "preload.js",
+      "calendar.js",
+      "renderer/**",
+      "build/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "My Life",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "artifactName": "MyLife-Setup.exe"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/lostak/powder-report/releases/download/my-life-desktop"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
+}

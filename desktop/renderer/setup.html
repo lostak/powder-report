@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>My Life – Setup</title>
+<style>
+  body{margin:0;background:#0b1220;color:#e8eef9;font:15px/1.5 Segoe UI,system-ui,sans-serif}
+  .w{max-width:460px;margin:0 auto;padding:24px 18px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px} h1 span{color:#7cc4ff}
+  .sub{color:#93a3bf;font-size:13px;margin-bottom:18px}
+  .card{background:#121b2e;border:1px solid #25324d;border-radius:14px;padding:16px;margin:12px 0}
+  label{display:block;font-size:12.5px;color:#93a3bf;margin:12px 0 4px}
+  input{width:100%;box-sizing:border-box;background:#18233a;border:1px solid #25324d;color:#e8eef9;border-radius:10px;padding:10px 12px;font:14px Segoe UI,sans-serif}
+  button{font:600 14px Segoe UI,sans-serif;border:0;border-radius:10px;padding:11px 16px;background:#3d8bff;color:#fff;cursor:pointer;margin-top:14px}
+  button.g{background:#18233a;color:#e8eef9}
+  ol{padding-left:20px;color:#cdd7ea;font-size:13.5px} li{margin:5px 0}
+  .msg{font-size:13.5px;margin-top:10px} .err{color:#ff7b7b} .ok{color:#5ee0a0}
+  a{color:#7cc4ff}
+</style>
+</head>
+<body><div class="w">
+  <h1>My <span>Life</span></h1>
+  <div class="sub">One-time setup. It's free: Google Calendar API with no billing account, and Ask Claude uses your Claude plan.</div>
+
+  <div class="card">
+    <b>1. Google sign-in client</b>
+    <ol>
+      <li>In <a href="https://console.cloud.google.com/apis/credentials">Google Cloud → Credentials</a> (the same project as the Android app, or a new one with the Google Calendar API enabled and you added as a test user)…</li>
+      <li>Create credentials → OAuth client ID → <b>Desktop app</b>.</li>
+      <li>Paste the client ID and secret below.</li>
+    </ol>
+    <label>Client ID</label><input id="cid" placeholder="1234-abc.apps.googleusercontent.com">
+    <label>Client secret</label><input id="sec" type="password" placeholder="(saved – leave blank to keep)">
+  </div>
+
+  <div class="card">
+    <b>2. Optional: live snow</b>
+    <label>Ski Outlook URL</label><input id="ski" placeholder="https://ski-outlook.you.workers.dev">
+  </div>
+
+  <button id="go">Save and sign in with Google</button>
+  <button class="g" id="back">Back to My Life</button>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+  const $ = (s) => document.querySelector(s);
+  const msg = (t, cls = "") => { $("#msg").className = "msg " + cls; $("#msg").textContent = t; };
+  (async () => {
+    const s = await window.lifeDesktop.getSetup();
+    $("#cid").value = s.clientId; $("#ski").value = s.skiUrl;
+    if (!s.hasSecret) $("#sec").placeholder = "GOCSPX-…";
+    $("#back").style.display = s.signedIn ? "" : "none";
+    $("#go").textContent = s.signedIn ? "Save" : "Save and sign in with Google";
+    $("#go").onclick = async () => {
+      try {
+        await window.lifeDesktop.saveSetup({ clientId: $("#cid").value, clientSecret: $("#sec").value, skiUrl: $("#ski").value });
+        if (s.signedIn) { msg("Saved.", "ok"); location.href = "index.html"; return; }
+        msg("Finish signing in in your browser…");
+        await window.lifeDesktop.signIn();
+      } catch (e) { msg(e.message || String(e), "err"); }
+    };
+    $("#back").onclick = () => { location.href = "index.html"; };
+  })();
+</script>
+</body>
+</html>

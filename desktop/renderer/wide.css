@@ -1,0 +1,56 @@
+nav .brand { display: none; }   /* only shown in the wide layout */
+/* My Life – wide-screen layout (Windows app, or any browser window 1000px+ wide).
+   Phones keep the original single column; this only kicks in on wide windows. */
+@media (min-width: 1000px) {
+  :root { --side: 232px; }
+  body { overflow-y: scroll; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #22304c; border-radius: 8px; border: 3px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: #2f4268; }
+
+  /* sidebar navigation */
+  nav { top: 0; bottom: 0; right: auto; width: var(--side); border-top: 0; border-right: 1px solid var(--line);
+        background: #0d1526; backdrop-filter: none; display: flex; flex-direction: column; }
+  nav .in { flex-direction: column; max-width: none; margin: 0; padding: 22px 14px; gap: 4px; }
+  nav .brand { display: block; font: 700 30px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .6px; color: var(--ink); padding: 4px 12px 24px; }
+  nav .brand span { color: var(--acc); }
+  nav button { flex: none; text-align: left; padding: 11px 14px; border-radius: 10px; font-size: 14.5px; color: var(--mute); display: flex; align-items: center; gap: 12px; }
+  nav button::before { width: 22px; text-align: center; font-size: 17px; }
+  nav button[data-tab="today"]::before { content: "☀️"; }
+  nav button[data-tab="ski"]::before { content: "⛷️"; }
+  nav button[data-tab="bets"]::before { content: "🏈"; }
+  nav button[data-tab="golf"]::before { content: "⛳"; }
+  nav button[data-tab="pool"]::before { content: "🎱"; }
+  nav button[data-tab="life"]::before { content: "🗂️"; }
+  nav button:hover { background: var(--panel); color: var(--ink); }
+  nav button.on { box-shadow: none; background: #1a2a48; color: var(--ink); }
+  nav button.on::after { content: ""; margin-left: auto; width: 6px; height: 6px; border-radius: 99px; background: var(--acc); }
+
+  /* main column */
+  .wrap { max-width: 1480px; margin: 0 0 0 var(--side); padding: 26px 36px 60px; }
+  header { margin: 0 0 18px; align-items: center; }
+  header h1 { display: none; }                         /* the sidebar carries the name */
+  header .sub { font: 600 22px/1.2 Inter, sans-serif; color: var(--ink); }
+  header button { padding: 10px 16px; }
+  .ask { max-width: 980px; padding: 14px 16px; }
+  .ask input { font-size: 15.5px; padding: 12px 14px; }
+
+  /* sections flow into columns of whole groups (a heading and its cards stay together) */
+  section { column-width: 380px; column-gap: 22px; margin-top: 6px; }
+  section > .grp { break-inside: avoid; display: inline-block; width: 100%; vertical-align: top; }
+  section > .grp > h2:first-child { margin-top: 14px; }
+  section > h2 { column-span: all; }
+  .card { margin: 10px 0; overflow-x: auto; }
+  .tap:hover { border-color: var(--acc); background: #142039; }
+  button:hover:not(:disabled) { filter: brightness(1.12); }
+
+  /* full-screen pages and sheets become centered panels */
+  .full .in { max-width: 920px; padding: 28px 32px 60px; }
+  .full { left: var(--side); }
+  .sheetbg { align-items: center; }
+  .sheet { border-radius: 18px; max-width: 560px; max-height: 84vh; box-shadow: 0 20px 60px #0008; }
+  .toast { bottom: 28px; left: calc(50% + var(--side) / 2); }
+  .timer { font-size: 140px; }
+}
+@media (min-width: 1500px) { section { column-count: 3; } }
