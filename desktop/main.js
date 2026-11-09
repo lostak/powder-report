@@ -173,6 +173,10 @@ app.whenReady().then(() => {
   checkAlerts(true);
   setInterval(() => checkAlerts(false), 15 * 60e3);
   setupUpdates();
+  // "Start with Windows" may still point at an old npm-start copy (bare electron.exe). Both copies use the same
+  // startup entry (named after the app id), so re-registering from the installed app points it back here.
+  if (app.isPackaged && process.platform === "win32" && app.getLoginItemSettings().openAtLogin)
+    app.setLoginItemSettings({ openAtLogin: true, path: process.execPath, args: ["--hidden"] });
 });
 app.on("before-quit", () => { quitting = true; });
 app.on("window-all-closed", (e) => e.preventDefault()); // keep running in the tray
