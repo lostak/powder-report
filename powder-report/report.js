@@ -1,5 +1,5 @@
 // Powder report. Every run: (1) 7-day snowfall forecast per mountain from the National Weather Service grid,
-// (2) overnight new snow from the nearest SNOTEL station (USDA), and posts urgent Slack alerts when thresholds hit.
+// (2) overnight new snow from the nearest SNOTEL station (USDA), and posts urgent Discord alerts when thresholds hit.
 // Read-only public data, no keys. State (what was already alerted) lives in state/state.json.
 const fs = require('fs');
 const cfg = JSON.parse(fs.readFileSync('mountains.json', 'utf8'));
@@ -82,13 +82,12 @@ async function overnightSnow(ms) {
   return out;
 }
 
-// Post to Slack (SLACK_WEBHOOK_URL) and Discord (DISCORD_WEBHOOK_URL) when set. Slack *bold* becomes Discord **bold**.
+// Post to Discord (DISCORD_WEBHOOK_URL). *bold* becomes Discord **bold**. (Slack was retired Nov 9, 2026.)
 async function slack(text) {
   if (DRY) { log('  (dry) would post:\n' + text.split('\n').map(l => '    ' + l).join('\n')); return; }
-  const s = process.env.SLACK_WEBHOOK_URL, d = process.env.DISCORD_WEBHOOK_URL;
-  if (!s && !d) throw new Error('SLACK_WEBHOOK_URL / DISCORD_WEBHOOK_URL not set');
+  const d = process.env.DISCORD_WEBHOOK_URL;
+  if (!d) throw new Error('DISCORD_WEBHOOK_URL not set');
   const post = async (url, body, name) => { if (!url) return; const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(name + ' post failed ' + r.status); };
-  await post(s, { text }, 'Slack');
   await post(d, { content: text.replace(/\*([^*\n]+)\*/g, '**$1**').slice(0, 1990) }, 'Discord');
 }
 
@@ -165,7 +164,7 @@ async function slack(text) {
     summary.push('full report posted');
   }
   // 3) errors (once a day at most)
-  if (errors.length && !DRY && process.env.SLACK_WEBHOOK_URL && !Object.keys(fc).length && state.lastErrorDay !== now.date) {
+  if (errors.length && !DRY && process.env.DISCORD_WEBHOOK_URL && !Object.keys(fc).length && state.lastErrorDay !== now.date) {
     await slack('⚠️ Powder report could not read any forecasts: ' + errors.join('; ')); state.lastErrorDay = now.date;
   }
   const most = mountains.filter(m => fc[m.name]).map(m => ({ n: m.name, v: Math.max(...horizon.map(d => fc[m.name][d] || 0)) })).sort((a, b) => b.v - a.v)[0];

@@ -7,7 +7,7 @@ on:
     - cron: '1-56/5 * * * *'
   workflow_dispatch:
     inputs:
-      dry: { description: 'Dry run (no Slack, no state)', type: boolean, default: false }
+      dry: { description: 'Dry run (no Discord, no state)', type: boolean, default: false }
       debug: { description: 'Verbose log', type: boolean, default: false }
       report: { description: 'Post the full snow report now', type: boolean, default: false }
 # The loop and manual runs use separate groups so a manual report is never replaced by the loop's next run.
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: node report.js ${{ inputs.dry && '--dry' || '' }} ${{ inputs.debug && '--debug' || '' }} ${{ inputs.report && '--report' || '' }}
-        env: { SLACK_WEBHOOK_URL: '${{ secrets.SLACK_WEBHOOK_URL }}', DISCORD_WEBHOOK_URL: '${{ secrets.DISCORD_WEBHOOK_URL }}', GCAL_SA_KEY: '${{ secrets.GCAL_SA_KEY }}', GCAL_CALENDAR_ID: '${{ secrets.GCAL_CALENDAR_ID }}' }
+        env: { DISCORD_WEBHOOK_URL: '${{ secrets.DISCORD_WEBHOOK_URL }}', GCAL_SA_KEY: '${{ secrets.GCAL_SA_KEY }}', GCAL_CALENDAR_ID: '${{ secrets.GCAL_CALENDAR_ID }}' }
       - name: Save state
         if: ${{ !inputs.dry }}
         run: |
