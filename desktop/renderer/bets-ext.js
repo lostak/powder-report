@@ -22,7 +22,8 @@
   .bh-thumb{width:26px;height:34px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-left:6px;border:1px solid var(--line)}
   .bh-tbl{width:100%;border-collapse:collapse;font-size:13px} .bh-tbl td{padding:5px 2px;border-top:1px solid var(--line)} .bh-tbl td:not(:first-child){text-align:right}
   .bh-big img{width:100%;border-radius:12px;margin-top:8px}
-  .bh-chart{width:100%;height:120px;display:block;margin-top:8px}`; document.head.append(st); })();
+  .bh-chart{width:100%;height:120px;display:block;margin-top:8px}
+  .bh-place{margin-top:6px;padding:4px 10px;font-size:12px;border-radius:99px}`; document.head.append(st); })();
 
 const BH = { rows: {}, slips: [], loaded: false, filter: "all", sport: "all", view: "mine" };
 // a bet counts as yours only when the log says you placed it, or it came from one of your slips
@@ -111,7 +112,8 @@ function bhRowHTML(r) {
   return `<div class="bh-row"><div class="bh-res ${r.status}">${r.status === "pending" ? "…" : r.status}</div>
     <div><div class="bh-bet">${r.parlay ? "🔗 Parlay: " : ""}${esc(r.bet)}${sl ? `<img class="bh-thumb" src="${esc(bhSlipUrl(sl))}" data-slip="${esc(sl.assetId)}" alt="slip">` : ""}</div>
       <div class="bh-sub">${esc([r.slip ? "from your slip" : "", r.price, r.book, r.slip ? (r.stake$ ? `$${r.stake$.toFixed(2)} stake` : "") : r.stakeU ? r.stakeU + "u" + (r.stake$ && bhMine(r) ? ` ($${r.stake$})` : "") : "", r.conf].filter(Boolean).join(" · "))}${BH.view === "picks" && bhPlacedLabel(r) ? " · " + bhPlacedLabel(r) : ""}${r.clv === true ? ' · <span class="pill good">beat close</span>' : r.clv === false ? ' · <span class="pill bad">missed close</span>' : ""}</div>
-      ${r.result && r.status !== "pending" && !r.slip ? `<div class="bh-sub">${esc(r.result.replace(/\s*[+-]\d+(\.\d+)?u.*$/, ""))}</div>` : ""}</div>
+      ${r.result && r.status !== "pending" && !r.slip ? `<div class="bh-sub">${esc(r.result.replace(/\s*[+-]\d+(\.\d+)?u.*$/, ""))}</div>` : ""}
+      ${BH.view === "picks" && !r.slip && (r.placed === "not yet" || r.placed === "no") ? `<button class="g bh-place" data-place-date="${esc(r.date)}" data-place-bet="${esc(r.bet)}" data-place-parlay="${r.parlay ? 1 : ""}">I placed this</button>` : ""}</div>
     <div class="bh-pl ${r.units > 0 ? "up" : r.units < 0 ? "dn" : ""}">${BH.view === "mine" && r.dollars !== null && r.status !== "pending" ? fmtD(r.dollars) + (pl ? `<small>${pl}</small>` : "") : pl + (r.dollars !== null && r.status !== "pending" && bhMine(r) ? `<small>${fmtD(r.dollars)}</small>` : r.status === "pending" ? `<small>${esc(r.start || "pending")}</small>` : "")}</div></div>`;
 }
 function bhBreak(rows, key, label) {
@@ -149,6 +151,7 @@ async function openBetHistory() {
     f.querySelector("#bhUp")?.addEventListener("click", () => bhUpload(draw));
     f.querySelectorAll("[data-slip]").forEach(i => i.onclick = (e) => { e.stopPropagation(); bhViewSlip(i.dataset.slip); });
   };
+  BH.redraw = () => { if (document.body.contains(f)) draw(); };
   draw();
 }
 function bhViewSlip(assetId) {
@@ -226,6 +229,28 @@ function bhLogCard(log) {
     ${body || '<div class="empty">No picks logged yet.</div>'}
     <div class="acts"><button data-open="bethistory">Full bet history</button></div></div>`;
 }
+// "I placed this": marks a pick placed at the logged price and stake (placed: yes). A pick already graded as not placed
+// gets its dollars filled in from its units and stake. The morning grading recomputes the bankroll from these lines.
+async function bhMarkPlaced(date, bet, parlay) {
+  const log = LOGS["Personal: picks log"]; if (!log) throw new Error("no picks log");
+  const lines = String(log.description || "").split("\n");
+  const i = lines.findIndex(l => { const p = l.split(" | ").map(x => x.trim()); return p[0] === date && p[1] && p[1].replace(/^PARLAY:\s*/i, "") === bet && /^PARLAY:/i.test(p[1]) === !!parlay; });
+  if (i < 0) throw new Error("couldn't find that pick in the log");
+  let l = lines[i].replace(/placed:\s*(not yet|no)\b/i, "placed: yes");
+  const m = l.match(/result:\s*\w+[^|]*?([+-]\d+(?:\.\d+)?)u \(not placed, no \$\)/i), st = l.match(/(\d+(?:\.\d+)?)u \(\$(\d+(?:\.\d+)?)/);
+  if (m && st) { const d = +m[1] * (+st[2] / +st[1]); l = l.replace(/ \(not placed, no \$\)/, `, ${d < 0 ? "-" : "+"}$${Math.abs(d).toFixed(2)}`); }
+  lines[i] = l; const description = lines.join("\n");
+  await updateEvent(log.id, { description }); log.description = description;
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-place-date]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); b.disabled = true; b.textContent = "Saving…";
+  try {
+    await bhMarkPlaced(b.dataset.placeDate, b.dataset.placeBet, b.dataset.placeParlay);
+    toast("Marked placed – it counts toward your bankroll now.");
+    await bhLoad().catch(() => {}); BH.redraw?.(); try { TABS.bets(); } catch {}
+  } catch (x) { b.disabled = false; b.textContent = "I placed this"; toast("Couldn't mark it: " + (x?.message || x)); }
+}, true);
 OPEN.bethistory = openBetHistory;
 OPEN.betslip = () => bhUpload(() => {});
 { const rb = TABS.bets; TABS.bets = () => { rb(); const el = $("#tab-bets"); if (!el) return;
