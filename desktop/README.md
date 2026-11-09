@@ -4,7 +4,7 @@ The same My Life screens as the phone (Today, Ski with the workout timer, Sports
 
 Desktop extras:
 - **Windows notifications** for new alerts (powder, ticket drops, price/fare drops, show announcements). It checks every 15 minutes, and clicking a notification opens the app.
-- **System tray icon:** closing the window keeps it running in the tray. The tray menu has notifications on/off, Start with Windows, sign out, and quit.
+- **System tray icon:** closing the window quits the app. While it's open, the tray menu has notifications on/off, Start with Windows, sign out, and quit.
 - **Ask Claude** opens the Claude desktop app (or claude.ai) with your question filled in, so it runs on your Claude plan.
 
 ## Cost: $0

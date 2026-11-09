@@ -14,7 +14,7 @@ function setupUpdates() {
   autoUpdater.autoDownload = true; autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.on("update-downloaded", (info) => {
     updateReady = info.version; refreshTrayMenu();
-    // the window hides to the tray instead of quitting, so restart it ourselves when it's not on screen
+    // if it was started hidden (Start with Windows), restart it ourselves since nobody is looking
     const n = new Notification({ title: "My Life updated", body: `Version ${info.version} is ready. Click to restart now, or it installs next time My Life starts.`, icon: path.join(__dirname, "build", "icon.png") });
     n.on("click", () => { quitting = true; autoUpdater.quitAndInstall(true, true); }); n.show();
     if (win && !win.isVisible()) { quitting = true; setTimeout(() => autoUpdater.quitAndInstall(true, false), 5000); }
@@ -72,7 +72,7 @@ function createWindow() {
   }
   loadPage();
   win.webContents.on("did-finish-load", () => { if (pendingOpen) { const w = pendingOpen; pendingOpen = null; setTimeout(() => win.webContents.send("open", w), 1500); } });
-  win.on("close", (e) => { if (!quitting) { e.preventDefault(); win.hide(); } });
+  // closing the window quits the app (no hiding in the tray)
   // links inside the page open in the real browser
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
   win.webContents.on("will-navigate", (e, url) => { if (!url.startsWith("file:")) { e.preventDefault(); shell.openExternal(url); } });
@@ -185,4 +185,4 @@ app.whenReady().then(() => {
   }
 });
 app.on("before-quit", () => { quitting = true; });
-app.on("window-all-closed", (e) => e.preventDefault()); // keep running in the tray
+app.on("window-all-closed", () => app.quit());
