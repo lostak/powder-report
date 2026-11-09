@@ -11,7 +11,7 @@
     "test": "node scripts/test-calendar.js"
   },
   "build": {
-    "appId": "com.lostak.mylife",
+    "appId": "com.lostak.mylife.desktop",
     "productName": "My Life",
     "files": [
       "main.js",
@@ -31,7 +31,8 @@
       "shortcutName": "My Life",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "artifactName": "MyLife-Setup.exe"
+      "artifactName": "MyLife-Setup.exe",
+      "guid": "935c4b04-cca8-53b8-b76b-958666e87ebf"
     },
     "publish": [
       {

@@ -25,7 +25,10 @@ function setupUpdates() {
   app.on("browser-window-focus", () => { if (!updateReady) check(); });
 }
 
-app.setAppUserModelId("com.lostak.mylife"); // needed for Windows notifications
+// Windows taskbar/notification identity. The installed app uses a fresh id (the old "com.lostak.mylife" got tied to a
+// pinned bare-Electron icon by an early npm-start copy); npm-start copies use a separate dev id so they never collide.
+const APP_ID = app.isPackaged ? "com.lostak.mylife.desktop" : "com.lostak.mylife.dev";
+app.setAppUserModelId(APP_ID); // must match the installer's shortcuts (build.appId) for notifications
 if (!app.requestSingleInstanceLock()) app.quit();
 
 const dataDir = () => app.getPath("userData");
@@ -65,7 +68,7 @@ function createWindow() {
   if (process.platform === "win32") {
     const ico = app.isPackaged ? process.execPath : path.join(__dirname, "build", "icon.ico");
     const cmd = app.isPackaged ? `"${process.execPath}"` : `"${process.execPath}" "${path.resolve(__dirname)}"`;
-    try { win.setAppDetails({ appId: "com.lostak.mylife", appIconPath: ico, appIconIndex: 0, relaunchCommand: cmd, relaunchDisplayName: "My Life" }); } catch {}
+    try { win.setAppDetails({ appId: APP_ID, appIconPath: ico, appIconIndex: 0, relaunchCommand: cmd, relaunchDisplayName: "My Life" }); } catch {}
   }
   loadPage();
   win.webContents.on("did-finish-load", () => { if (pendingOpen) { const w = pendingOpen; pendingOpen = null; setTimeout(() => win.webContents.send("open", w), 1500); } });
@@ -173,10 +176,13 @@ app.whenReady().then(() => {
   checkAlerts(true);
   setInterval(() => checkAlerts(false), 15 * 60e3);
   setupUpdates();
-  // "Start with Windows" may still point at an old npm-start copy (bare electron.exe). Both copies use the same
-  // startup entry (named after the app id), so re-registering from the installed app points it back here.
-  if (app.isPackaged && process.platform === "win32" && app.getLoginItemSettings().openAtLogin)
-    app.setLoginItemSettings({ openAtLogin: true, path: process.execPath, args: ["--hidden"] });
+  // "Start with Windows": the old entry (named after the old id) may point at a bare npm-start electron.exe.
+  // Remove it and register the installed app under its own id instead.
+  if (app.isPackaged && process.platform === "win32") {
+    const old = app.getLoginItemSettings({ name: "com.lostak.mylife" }).openAtLogin, now = app.getLoginItemSettings().openAtLogin;
+    if (old) app.setLoginItemSettings({ openAtLogin: false, name: "com.lostak.mylife" });
+    if (old || now) app.setLoginItemSettings({ openAtLogin: true, path: process.execPath, args: ["--hidden"] });
+  }
 });
 app.on("before-quit", () => { quitting = true; });
 app.on("window-all-closed", (e) => e.preventDefault()); // keep running in the tray
