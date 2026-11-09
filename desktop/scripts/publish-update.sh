@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Copies the latest Windows build from this private repo's "desktop-latest" release to the public update feed
-# (lostak/powder-report, release "my-life-desktop") that installed copies of My Life check for updates.
+# Ships a new version of the Windows app: copies this desktop folder (screens synced from ../web) to the public
+# lostak/powder-report "my-life-desktop" branch. Its Actions build the installer and the update feed
+# (release "my-life-desktop"); installed copies pick it up within 30 minutes and install on restart.
 set -euo pipefail
-d=$(mktemp -d); cd "$d"
-gh release download desktop-latest -R lostak/my-life -p 'MyLife-Setup.exe' -p 'MyLife-Setup.exe.blockmap' -p 'latest.yml'
-grep -E '^version:' latest.yml
-R=lostak/powder-report
-if gh api "repos/$R/releases/tags/my-life-desktop" >/dev/null 2>&1; then
-  gh release upload my-life-desktop -R $R MyLife-Setup.exe MyLife-Setup.exe.blockmap latest.yml --clobber
-else
-  gh release create my-life-desktop -R $R MyLife-Setup.exe MyLife-Setup.exe.blockmap latest.yml --title "My Life for Windows (update feed)" \
-    --notes "Installer and update feed for the My Life Windows app. Installed copies update themselves from here." --latest=false
-fi
-echo "published to https://github.com/$R/releases/download/my-life-desktop/MyLife-Setup.exe"
+here=$(cd "$(dirname "$0")/.." && pwd)
+node "$here/scripts/sync-web.js"
+d=$(mktemp -d); git clone -q --single-branch --branch refs/heads/my-life-desktop https://github.com/lostak/powder-report "$d" 2>/dev/null || git clone -q --single-branch --branch my-life-desktop https://github.com/lostak/powder-report "$d"
+rm -rf "$d/desktop"; mkdir -p "$d/desktop"
+(cd "$here" && tar --exclude=node_modules --exclude=dist -cf - .) | tar -xf - -C "$d/desktop"
+node -e "const f='$d/desktop/package.json',j=require(f);j.scripts['sync-web']='echo renderer is synced from the private repo';require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+cd "$d" && git add -A
+if git diff --cached --quiet; then echo "no changes to ship"; exit 0; fi
+git commit -qm "${1:-Update My Life for Windows}" && git push -q origin HEAD:refs/heads/my-life-desktop
+echo "pushed; the build takes ~4 min: https://github.com/lostak/powder-report/actions"

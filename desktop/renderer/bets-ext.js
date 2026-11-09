@@ -211,7 +211,8 @@ async function bhWriteLog(bets) {
 }
 // The picks log's pipe lines are 10 columns wide, so as a table they scroll sideways. Show it as a short summary
 // plus the latest two days as wrapped rows instead; everything older is in Bet history.
-window.picksLogCard = (log) => {
+window.picksLogCard = (log) => { try { return bhLogCard(log); } catch { return card(log); } };
+function bhLogCard(log) {
   const d = String(log?.description || ""), h = bhHeader(d), unit = parseFloat(h.unit) || 2;
   const rows = bhParseLog(d).map(r => r.slip ? { ...r, units: r.dollars !== null ? r.dollars / unit : null } : r);
   const dates = [...new Set(rows.map(r => r.date))].sort().reverse().slice(0, 2);
@@ -224,7 +225,7 @@ window.picksLogCard = (log) => {
     ${line("Your bets:", h.mine)}${line("All picks:", h.picks)}${line("CLV:", h.clv)}
     ${body || '<div class="empty">No picks logged yet.</div>'}
     <div class="acts"><button data-open="bethistory">Full bet history</button></div></div>`;
-};
+}
 OPEN.bethistory = openBetHistory;
 OPEN.betslip = () => bhUpload(() => {});
 { const rb = TABS.bets; TABS.bets = () => { rb(); const el = $("#tab-bets"); if (!el) return;

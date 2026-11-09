@@ -35,7 +35,7 @@ After installing, open **My Life** from the Start menu, then right-click its ico
 Right-click the pinned icon for shortcuts that jump straight in: **Start ski workout**, **Start pool session**, **Tonight's betting lesson**, and **Today**.
 
 ## Updates
-Installed copies update themselves: every 30 minutes they check https://github.com/lostak/powder-report/releases/download/my-life-desktop, download only what changed, and install on restart. A notification offers to restart now, and the tray menu has "Restart to update". After a build, run `scripts/publish-update.sh` to push it to that feed.
+Installed copies update themselves: every 30 minutes they check https://github.com/lostak/powder-report/releases/download/my-life-desktop, download only what changed, and install on restart. A notification offers to restart now, and the tray menu has "Restart to update". To ship a change, run `scripts/publish-update.sh`: it pushes this folder to the powder-report `my-life-desktop` branch, whose Actions build the installer and update feed.
 
 ## Updating the screens
 The screens come from the shared web app (`../web/index.html`). After that changes, run `npm run sync-web` and then `npm run dist`.
