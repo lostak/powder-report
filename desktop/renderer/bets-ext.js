@@ -164,14 +164,30 @@ function bhViewSlip(assetId) {
   document.body.append(bg);
 }
 const bhToday = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ });
-async function bhRead(blob) {
-  if (!sample) return [];
-  const lim = await sample.limits?.().catch(() => null); if (lim && !lim.images) return [];
-  const r = await sample(`This image is a screenshot of a sportsbook bet slip or bet history (usually DraftKings). Today is ${bhToday()} (America/Denver). List every bet visible.
-Return ONLY JSON, no prose: {"bets":[{"date":"YYYY-MM-DD the bet was placed or the game date if that's all that's shown (assume this season if no year)","type":"single or parlay","bet":"short plain description, e.g. 'Tulane +3 vs Tulsa' or 'Kentucky @ Tennessee Under 49.5'; for a parlay the legs joined with ' / '","odds":"American odds as shown, e.g. -118 or +571","stake":2.00,"toWin":1.69,"book":"DraftKings","status":"open, won, lost, push, void or cashed out"}]}
-Use null for anything you can't read. Never include account numbers, names, balances or bet IDs.`, { images: [blob], modelTier: "default", cache: false });
+// Phone screenshots are big (often 1080×2400 PNG, 2–4 MB); several at once could be too much for one read.
+// Shrink each to a JPEG at most 2000 px tall/wide – still easily readable – before uploading and reading.
+async function bhShrink(file, max = 2000) {
+  try {
+    const bmp = await createImageBitmap(file), k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    if (k === 1 && file.size < 1.5e6) return file;
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const b = await new Promise(r => c.toBlob(r, "image/jpeg", 0.88));
+    return b ? new File([b], (file.name || "slip").replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file;
+  } catch { return file; }
+}
+const bhErr = (e) => e?.code === "rate_limited" ? "Claude is busy – try again in a minute" : e?.code === "not_granted" ? "reading images isn't allowed in this view" : e?.code === "cancelled" ? "cancelled" : (e?.message || String(e)).slice(0, 120);
+// Reads one or more slip images in ONE Claude call; each bet comes back with the number of the image it's on.
+async function bhRead(blobs) {
+  blobs = [].concat(blobs);
+  if (!sample) throw Object.assign(new Error("Claude can't read images in this view"), { code: "not_granted" });
+  const lim = await sample.limits?.().catch(() => null); if (lim && !lim.images) throw Object.assign(new Error("image reading is off"), { code: "not_granted" });
+  const n = blobs.length;
+  const r = await sample(`${n === 1 ? "This image is a screenshot" : `These ${n} images are screenshots`} of sportsbook bet slips or bet history (usually DraftKings). Today is ${bhToday()} (America/Denver). List every bet visible${n > 1 ? " in every image; the same bet can appear in two images – list it once" : ""}.
+Return ONLY JSON, no prose: {"bets":[{"image":1,"date":"YYYY-MM-DD the bet was placed or the game date if that's all that's shown (assume this season if no year)","type":"single or parlay","bet":"short plain description, e.g. 'Tulane +3 vs Tulsa' or 'Kentucky @ Tennessee Under 49.5'; for a parlay the legs joined with ' / '","odds":"American odds as shown, e.g. -118 or +571","stake":2.00,"toWin":1.69,"book":"DraftKings","status":"open, won, lost, push, void or cashed out"}]}
+"image" is the 1-based number of the image the bet is in. Use null for anything you can't read. Never include account numbers, names, balances or bet IDs.`, { images: blobs, modelTier: "default", cache: false });
   const t = String(r?.text || ""); const j = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
-  return (j.bets || []).filter(b => b && b.bet);
+  return (j.bets || []).filter(b => b && b.bet).map(b => ({ ...b, image: Math.min(n, Math.max(1, parseInt(b.image) || 1)) }));
 }
 const bhLine = (b) => [b.date || bhToday(), b.type === "parlay" && !/parlay/i.test(b.bet) ? "Parlay: " + b.bet : b.bet, b.odds || "?", b.stake != null ? `$${(+b.stake).toFixed(2)}${b.toWin != null ? ` to win $${(+b.toWin).toFixed(2)}` : ""}` : "$?", b.book || "DraftKings", (b.status || "open").toLowerCase()].join(" | ");
 function bhUnline(l) { const p = l.split(" | ").map(s => s.trim()); if (!/^\d{4}-\d{2}-\d{2}$/.test(p[0] || "") || !p[1]) return null;
@@ -180,30 +196,61 @@ function bhUnline(l) { const p = l.split(" | ").map(s => s.trim()); if (!/^\d{4}
 async function bhUpload(redraw) {
   if (!bhAssets) { toast("Slip uploads work in the Claude app."); return; }
   const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.multiple = true;
+  inp.style.display = "none"; document.body.append(inp);      // some phone browsers only fire "change" for inputs in the page
   inp.onchange = async () => {
-    const files = [...inp.files]; if (!files.length) return;
-    for (const file of files) {
-      toast("Uploading slip…");
-      let up; try { up = await bhAssets.upload(file); } catch (e) { toast("Upload failed: " + (e?.message || e)); continue; }
-      let bets = []; try { toast("Claude is reading the slip…"); bets = await bhRead(file); } catch { toast("Couldn't read the slip – type the bets in."); }
-      const v = await confirmSheet({ heading: "Bets on this slip", body: "One bet per line: date | bet | odds | $stake to win $x | book | status. Fix anything Claude misread, or clear it to keep only the picture.",
-        fields: [{ label: "Bets", type: "textarea", value: bets.map(bhLine).join("\n") }], ok: "Save" });
-      if (v === null || v === undefined || v === false) { BH.slips.push({ assetId: up.id, url: up.url, uploaded: new Date().toISOString(), bets: [] }); }
-      else {
-        const text = Array.isArray(v) ? v[0] : (typeof v === "object" ? Object.values(v)[0] : v);
-        const parsed = String(text || "").split("\n").map(bhUnline).filter(Boolean);
-        BH.slips.push({ assetId: up.id, url: up.url, uploaded: new Date().toISOString(), bets: parsed });
-        if (parsed.length) await bhWriteLog(parsed).catch(e => toast("Saved the slip, but couldn't update the picks log: " + (e?.message || e)));
+    const files = [...inp.files]; inp.remove(); if (!files.length) return;
+    const n = files.length, many = n > 1;
+    toast(many ? `Preparing ${n} slips…` : "Preparing the slip…");
+    const imgs = await Promise.all(files.map(f => bhShrink(f)));
+    // 1) upload every picture (in parallel); a failed upload is reported but doesn't stop the rest
+    toast(many ? `Uploading ${n} slips…` : "Uploading the slip…");
+    const ups = await Promise.allSettled(imgs.map(f => bhAssets.upload(f)));
+    const failedUp = ups.filter(u => u.status === "rejected").length;
+    // 2) read them: all in one call (batches of 4), falling back to one image at a time if a batch fails
+    toast(many ? `Claude is reading ${n} slips…` : "Claude is reading the slip…");
+    let bets = [], unread = [], why = "";
+    for (let b = 0; b < n; b += 4) {
+      const part = imgs.slice(b, b + 4);
+      try { bets.push(...(await bhRead(part)).map(x => ({ ...x, image: x.image + b }))); }
+      catch (e) {
+        why = bhErr(e);
+        for (let k = 0; k < part.length; k++) {
+          try { bets.push(...(await bhRead(part[k])).map(x => ({ ...x, image: b + k + 1 }))); }
+          catch (e2) { why = bhErr(e2); unread.push(b + k + 1); }
+        }
       }
-      bhLocal("slips", BH.slips); cloudSet("betslips", { items: BH.slips, at: Date.now() });
     }
-    toast("Slip saved."); redraw?.(); try { TABS.bets(); } catch {}
+    // 3) one confirmation for everything
+    const note = [failedUp ? `${failedUp} of ${n} picture${failedUp === 1 ? "" : "s"} didn't upload.` : "",
+      unread.length ? `Couldn't read slip${unread.length === 1 ? "" : "s"} ${unread.join(", ")}${why ? " (" + why + ")" : ""} – type those bets in.` : ""].filter(Boolean).join(" ");
+    const v = await confirmSheet({ heading: many ? `Bets on these ${n} slips` : "Bets on this slip",
+      body: "One bet per line: date | bet | odds | $stake to win $x | book | status. Fix anything Claude misread, or clear it to keep only the pictures." + (note ? " " + note : ""),
+      fields: [{ label: "Bets", type: "textarea", value: bets.map(bhLine).join("\n") }], ok: "Save" });
+    const text = v === null || v === undefined || v === false ? "" : Array.isArray(v) ? v[0] : (typeof v === "object" ? Object.values(v)[0] : v);
+    const parsed = String(text || "").split("\n").map(bhUnline).filter(Boolean);
+    // each saved bet goes with the picture Claude found it on (for the thumbnails); anything typed in goes with the first
+    const key = (b) => String(b.bet || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const imageOf = (p) => (bets.find(b => key(b) === key(p))?.image) || 1;
+    ups.forEach((u, k) => { if (u.status === "fulfilled") BH.slips.push({ assetId: u.value.id, url: u.value.url, uploaded: new Date().toISOString(), bets: parsed.filter(p => imageOf(p) === k + 1) }); });
+    bhLocal("slips", BH.slips); cloudSet("betslips", { items: BH.slips, at: Date.now() });
+    if (parsed.length) await bhWriteLog(parsed).catch(e => toast("Saved the slips, but couldn't update the picks log: " + (e?.message || e)));
+    const saved = ups.length - failedUp;
+    toast(`${saved} slip${saved === 1 ? "" : "s"} saved${parsed.length ? `, ${parsed.length} bet${parsed.length === 1 ? "" : "s"} added` : ""}.`);
+    redraw?.(); try { TABS.bets(); } catch {}
   };
   inp.click();
 }
+// Before changing the picks log, re-read it from the calendar: the page may have been open for hours and the betting
+// task or the grader may have rewritten it since. Writing back an old copy would erase their updates.
+async function bhLiveLog() {
+  const log = LOGS["Personal: picks log"]; if (!log) return null;
+  const v = await payload(mcp.callTool(CAL, "get_event", { eventId: log.id }, { cache: { staleTime: 0, gcTime: 0, refresh: true } }));
+  const e = v?.event || v; if (!e || typeof e.description !== "string") throw new Error("couldn't re-read the picks log");
+  log.description = e.description; return log;
+}
 // actual bets go into the picks log as SLIP: lines (above the PICKS-LOG marker) so the grading task uses the real price and stake
 async function bhWriteLog(bets) {
-  const log = LOGS["Personal: picks log"]; if (!log) throw new Error("no picks log yet");
+  const log = await bhLiveLog(); if (!log) throw new Error("no picks log yet");
   const lines = String(log.description || "").split("\n"), have = new Set(lines.filter(l => /^SLIP:/.test(l)).map(l => l.toLowerCase().replace(/\s+/g, " ").split(" | ").slice(0, 3).join("|")));
   const add = bets.map(b => "SLIP: " + bhLine(b)).filter(l => !have.has(l.toLowerCase().replace(/\s+/g, " ").split(" | ").slice(0, 3).join("|")));
   if (!add.length) return;
@@ -232,7 +279,7 @@ function bhLogCard(log) {
 // "I placed this": marks a pick placed at the logged price and stake (placed: yes). A pick already graded as not placed
 // gets its dollars filled in from its units and stake. The morning grading recomputes the bankroll from these lines.
 async function bhMarkPlaced(date, bet, parlay) {
-  const log = LOGS["Personal: picks log"]; if (!log) throw new Error("no picks log");
+  const log = await bhLiveLog(); if (!log) throw new Error("no picks log");
   const lines = String(log.description || "").split("\n");
   const i = lines.findIndex(l => { const p = l.split(" | ").map(x => x.trim()); return p[0] === date && p[1] && p[1].replace(/^PARLAY:\s*/i, "") === bet && /^PARLAY:/i.test(p[1]) === !!parlay; });
   if (i < 0) throw new Error("couldn't find that pick in the log");
