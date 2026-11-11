@@ -260,3 +260,6 @@ OPEN.betslip = () => bhUpload(() => {});
   bhLoad().then(() => { const c = $("#bhCard"); if (c) c.innerHTML = bhSummaryCard(); }).catch(() => {}); }; }
 // the calendar can finish loading before this file does: redraw the tab once so the card shows up either way
 try { if (typeof LOGS !== "undefined" && LOGS && Object.keys(LOGS).length) TABS.bets(); } catch {}
+
+// after every calendar reload: re-read the picks log into the history, and redraw the bet history if it's open
+AFTER_RELOAD.push(async () => { BH.loaded = false; await bhLoad(); BH.redraw?.(); });   // re-reads saved rows + slips too

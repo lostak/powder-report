@@ -1224,15 +1224,42 @@ function calErr(e) {
     default: return "Couldn't load your calendar" + (e?.message ? `: ${e.message}` : ".");
   }
 }
-let loading = false;
-async function reload(refresh = false) {
-  if (!mcp || loading) return; loading = true; $("#refresh").disabled = true;
-  try { await loadAll(refresh); $("#setup").classList.add("hide"); renderAll(); }
-  catch (e) { setup(calErr(e)); }
-  finally { loading = false; $("#refresh").disabled = false; }
+// ---- keeping every view current ----
+// Phones and desktops keep this page open for days, so it reloads the calendar by itself: when you come back to it,
+// every 5 minutes while it's on screen, and at midnight. Each load bypasses the connector cache. The header always
+// says when the data was loaded, and a failed refresh shows a warning instead of silently leaving old data up.
+let loading = false, lastLoad = 0, loadFail = null, again = false;
+const AFTER_RELOAD = [];                 // other views (bet history, …) re-read their data here after each load
+const busyTyping = () => { const a = document.activeElement; return !!a && (a.matches?.("input,textarea,select") || a.isContentEditable); };
+function freshLine() {
+  const day = new Date().toLocaleDateString([], { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
+  const at = lastLoad ? new Date(lastLoad).toLocaleTimeString([], { timeZone: TZ, hour: "numeric", minute: "2-digit" }) : "";
+  const el = $("#dateLine"); if (!el) return;
+  el.innerHTML = esc(day) + (loadFail ? ` · <span style="color:var(--warn)">⚠ couldn't refresh${at ? ", showing " + esc(at) : ""} – tap ↻</span>` : at ? ` · updated ${esc(at)}` : "");
+  el.title = loadFail ? calErr(loadFail) : "";
 }
+async function reload(refresh = true) {
+  if (!mcp) return; if (loading) { again = true; return; }   // a save during a background refresh still gets a fresh load after it
+  loading = true; $("#refresh").disabled = true;
+  try {
+    await loadAll(refresh); lastLoad = Date.now(); loadFail = null; $("#setup").classList.add("hide"); renderAll();
+    for (const f of AFTER_RELOAD) { try { await f(); } catch {} }
+  } catch (e) { loadFail = e; if (!lastLoad) setup(calErr(e)); }
+  finally { loading = false; $("#refresh").disabled = false; freshLine(); if (again) { again = false; reload(true); } }
+}
+let loadedDay = new Date().toDateString();
+function maybeReload(maxAge) {
+  if (document.hidden || loading || busyTyping()) return;
+  if (new Date().toDateString() !== loadedDay) { loadedDay = new Date().toDateString(); return reload(true); }   // new day: "today" changed
+  if (Date.now() - lastLoad > maxAge) reload(true);
+}
+document.addEventListener("visibilitychange", () => maybeReload(60e3));
+window.addEventListener("focus", () => maybeReload(60e3));
+window.addEventListener("pageshow", () => maybeReload(60e3));
+window.addEventListener("online", () => maybeReload(0));
+setInterval(() => { maybeReload(5 * 60e3); freshLine(); }, 60e3);
 $("#refresh").onclick = () => reload(true);
-$("#dateLine").textContent = new Date().toLocaleDateString([], { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
+freshLine();
 if (TABS[location.hash.slice(1)]) document.querySelector(`nav button[data-tab="${location.hash.slice(1)}"]`).click(); else renderSugs();
 Object.keys(TABS).forEach(k => $("#tab-" + k).innerHTML = '<div class="empty" style="padding:20px 4px">Loading your calendar…</div>');
 (async () => {
@@ -1243,7 +1270,7 @@ Object.keys(TABS).forEach(k => $("#tab-" + k).innerHTML = '<div class="empty" st
   if (window.lifeDesktop) { const g = document.createElement("button"); g.className = "g"; g.textContent = "⚙"; g.title = "Settings"; g.onclick = () => window.lifeDesktop.openSetup(); $("#refresh").before(g, " "); }
   mcp = await c.use("mcp");
   if (!mcp) { setup("Connectors aren't available in this view. Open it in Claude."); return; }
-  await reload();
+  await reload(true);
   mcp.callTool(SKI, "get_weekend_outlook", null, { cache: { staleTime: 15 * 60e3, gcTime: 6 * 3600e3 } })
     .then(r => payload(r)).then(v => { skiOk = true; skiLive = v; try { renderSki(); } catch {} })
     .catch(() => { skiOk = false; try { renderSki(); } catch {} });
