@@ -4,9 +4,11 @@
    (● green circle = fine / won, ■ blue square = heads-up, ◆ diamond = needs attention / lost);
    a gold trail blaze marks each section. Big Shoulders Display for headings and numbers, Overpass (from the US highway-sign face) for text. */
 
+/* Overpass draws "·" off-center; borrow the middle dot from the system font */
+@font-face { font-family: "DotFix"; src: local("Roboto"), local("Arial"), local("Helvetica"), local("Segoe UI"); unicode-range: U+00B7, U+2022; }
 :root {
   --disp: "Big Shoulders Display", "Barlow Condensed", Impact, sans-serif;
-  --body: "Overpass", system-ui, -apple-system, sans-serif;
+  --body: "DotFix", "Overpass", system-ui, -apple-system, sans-serif;
   /* night skiing */
   --bg: #0a1a30; --panel: #10243f; --panel2: #18304f; --line: #24426b; --ink: #eef3f9; --mute: #94a9c6;
   --acc: #f6c343; --btn: #f6c343; --btn-ink: #0b1d38; --good: #3dd68c; --warn: #84b6ff; --bad: #ff5f64;
@@ -168,3 +170,15 @@ input, textarea, select { border-radius: var(--radius); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---- readable text: stacked bullets ---- */
+.rich ul { padding-left: 18px; margin: 4px 0 10px; }
+.rich li { margin: 6px 0; line-height: 1.4; }
+.rich li::marker { color: var(--gold); }
+.rich .li-h { display: block; font-weight: 700; color: var(--ink); }
+.rich .li-f { display: block; font-size: 13px; color: var(--mute); margin-top: 1px; }
+.rich .li-w { display: block; font-size: 13.5px; margin-top: 3px; }
+.rich p { margin: 0 0 8px; max-width: 70ch; }
+.rich .lab + ul { margin-top: 2px; }
+.rich p .li-h { display: block; font-weight: 700; }
+.desc.clip { max-height: 26em; }

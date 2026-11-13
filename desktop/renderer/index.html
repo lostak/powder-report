@@ -225,19 +225,27 @@ function fmtDesc(text) {
   const lines = String(text || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li)>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ")
     .split("\n").filter(l => !HIDE_LINE.test(l));
   const out = []; let list = null, table = null;
-  const flush = () => { if (list) { out.push(`<ul>${list.map(x => `<li>${inline(x)}</li>`).join("")}</ul>`); list = null; } if (table) { out.push(cellsTable(table)); table = null; } };
+  const flush = () => {
+    if (list) { out.push(`<ul>${list.map(x => `<li>${item(x)}</li>`).join("")}</ul>`); list = null; }
+    if (table) { out.push(table.length > 1 ? cellsTable(table) : `<ul>${table[0].map(x => `<li>${item(x)}</li>`).join("")}</ul>`); table = null; }
+  };
   for (let raw of lines) {
     const l = raw.trim();
     if (!l) { flush(); continue; }
-    // pipe-separated rows → table
+    // "LABEL: a | b | c" → the label, then one bullet per part (a summary line, not a table)
+    const lp = l.match(/^([A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*\s\|\s.*)$/);
+    if (lp && (/^[A-Z0-9 &/'’()\-?]+$/.test(lp[1]) || lp[1].split(" ").length <= 4)) {
+      flush(); out.push(`<div class="lab">${esc(lp[1])}</div>`); out.push(`<ul>${lp[2].split(/\s+\|\s+/).map(x => `<li>${item(x)}</li>`).join("")}</ul>`); continue;
+    }
+    // pipe-separated rows → a table only when several rows line up; a lone pipe line → bullets
     if ((l.match(/ \| /g) || []).length >= 1) { if (list) flush(); (table = table || []).push(l.split(/\s+\|\s+/)); continue; }
     if (table) flush();
     // explicit bullets / numbered / checkbox lines
     const b = l.match(/^(?:[-•*▪]|\d{1,2}[.)])\s+(.*)$/);
     if (b) { (list = list || []).push(b[1]); continue; }
     // "LABEL: rest" → section heading
-    const m = l.match(/^([A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*)$/);
-    if (m && (/^[A-Z0-9 &/'’()\-?]+$/.test(m[1]) || m[1].split(" ").length <= 4)) {
+    const m = l.match(/^([A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*)$/) || l.match(/^([A-Z][A-Z0-9/ &]{1,14}\s*\([^)]{1,60}\)):\s*(.*)$/);
+    if (m && (/^[A-Z0-9 &/'’()\-?]+$/.test(m[1]) || m[1].split(" ").length <= 4 || /^[A-Z0-9/ &]+\s*\(/.test(m[1]))) {
       flush();
       const rest = m[2];
       if (/^sources?$/i.test(m[1])) { out.push(`<div class="src">${inline(rest)}</div>`); continue; }
@@ -250,11 +258,20 @@ function fmtDesc(text) {
   flush();
   return `<div class="rich">${out.join("")}</div>`;
   function pushPara(s) {
-    // long " · " / "; " runs → bullets; very long prose → one sentence per line
-    if (s.length > 110 && (s.match(/ · /g) || []).length >= 2) { out.push(`<ul>${s.split(/\s+·\s+/).map(x => `<li>${inline(x)}</li>`).join("")}</ul>`); return; }
-    if (s.length > 160 && (s.match(/; /g) || []).length >= 2) { out.push(`<ul>${s.split(/;\s+/).map(x => `<li>${inline(x)}</li>`).join("")}</ul>`); return; }
-    if (s.length > 240) { const parts = s.split(/(?<=[.!?])\s+(?=[A-Z(])/); out.push(`<ul class="sent">${parts.map(x => `<li>${inline(x)}</li>`).join("")}</ul>`); return; }
+    // keep paragraphs short: " · " / "; " runs → bullets; prose over ~2 lines → one sentence per line
+    if (s.length > 70 && (s.match(/ · /g) || []).length >= 2) { out.push(`<ul>${s.split(/\s+·\s+/).map(x => `<li>${item(x)}</li>`).join("")}</ul>`); return; }
+    if (s.length > 90 && (s.match(/; /g) || []).length >= 1) { out.push(`<ul>${s.split(/;\s+/).map(x => `<li>${item(x)}</li>`).join("")}</ul>`); return; }
+    if (s.length > 150) { const parts = s.split(/(?<=[.!?])\s+(?=[A-Z(\d])/); if (parts.length > 1) { out.push(`<ul class="sent">${parts.map(x => `<li>${inline(x)}</li>`).join("")}</ul>`); return; } }
+    if ((s.match(/ [–—] /g) || []).length >= 2) { out.push(`<p>${item(s)}</p>`); return; }
     out.push(`<p>${inline(s)}</p>`);
+  }
+  // one bullet: "Bet – 1u ($2) – long reasoning – Low – stop at -4" → the bet on top, the short facts on one line under it,
+  // and any long reasoning on its own line (nothing dropped, just stacked)
+  function item(x) {
+    const p = String(x).split(/\s+[–—]\s+/);
+    if (p.length < 3 && !(p.length === 2 && p[1].length > 50)) return inline(x);
+    const facts = p.slice(1).filter(t => t.length <= 50), why = p.slice(1).filter(t => t.length > 50);
+    return `<span class="li-h">${inline(p[0])}</span>${facts.length ? `<span class="li-f">${facts.map(inline).join(" · ")}</span>` : ""}${why.map(t => `<span class="li-w">${inline(t)}</span>`).join("")}`;
   }
 }
 const richSize = (h) => (h.match(/<(p|li|tr|div class="lab")/g) || []).length;

@@ -23,6 +23,8 @@
   .bh-tbl{width:100%;border-collapse:collapse;font-size:13px} .bh-tbl td{padding:5px 2px;border-top:1px solid var(--line)} .bh-tbl td:not(:first-child){text-align:right}
   .bh-big img{width:100%;border-radius:12px;margin-top:8px}
   .bh-chart{width:100%;height:120px;display:block;margin-top:8px}
+  .bh-list{margin:8px 0 0;padding-left:16px;color:var(--mute);font-size:13px;line-height:1.45} .bh-list li{margin:2px 0} .bh-list li::marker{color:var(--gold,var(--acc))}
+  .bh-k{font-weight:700;font-size:13px;color:var(--ink);margin-top:10px}
   .bh-place{margin-top:6px;padding:4px 10px;font-size:12px;border-radius:99px}
   .bh-pbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:12.5px}
   .bh-pbox label{display:flex;align-items:center;gap:6px;cursor:pointer} .bh-pbox input[type=checkbox]{width:18px;height:18px;accent-color:var(--good)}
@@ -118,7 +120,7 @@ function bhSummaryCard() {
   const all = Object.values(BH.rows), mine = all.filter(bhMine), s = bhStats(mine), p = bhStats(all.filter(r => !r.slip)), h = bhHeader(LOGS["Personal: picks log"]?.description);
   return `<div class="card tap" data-open="bethistory"><span class="go">Open ›</span><div class="t">Your bets</div>
     <div class="stat"><div><b>${s.graded ? s.rec : "–"}</b><small>record</small></div><div><b>${s.graded ? fmtD(s.dollars) : "–"}</b><small>profit</small></div><div><b>${h.placedBank ? "$" + h.placedBank : "–"}</b><small>placed bankroll</small></div><div><b>${h.bankroll ? "$" + h.bankroll : "–"}</b><small>picks bankroll</small></div></div>
-    <div class="when" style="margin-top:8px">${s.pending ? s.pending + " open · " : ""}Placed bankroll: only my picks you checked off, at your odds and line. Picks bankroll: every pick, placed or not. All picks: ${p.rec}, ${p.graded ? fmtU(p.units) : "–"}</div>
+    <ul class="bh-list">${s.pending ? `<li>${s.pending} open bet${s.pending === 1 ? "" : "s"}</li>` : ""}<li>Placed: my picks you ticked, at your odds</li><li>Picks: every pick · ${p.rec}, ${p.graded ? fmtU(p.units) : "–"}</li></ul>
     <div class="acts"><button data-open="bethistory">See all bets</button>${bhAssets ? `<button class="g" data-open="betslip">Upload bet slip</button>` : ""}</div></div>`;
 }
 function bhRowHTML(r) {
@@ -149,16 +151,16 @@ async function openBetHistory() {
     f.querySelector("#bhBody").innerHTML = `
       <div class="bh-chips" id="bhV">${[["mine", "Your bets"], ["picks", "All picks"]].map(([k, l]) => `<button data-v="${k}" class="${BH.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
       ${mine ? `<div class="card"><div class="stat"><div><b>${s.graded ? s.rec : "–"}</b><small>W-L</small></div><div><b>${s.graded ? fmtD(s.dollars) : "–"}</b><small>profit</small></div><div><b>${s.roi$ === null ? "–" : Math.round(s.roi$) + "%"}</b><small>ROI</small></div><div><b>${h.bankroll ? "$" + h.bankroll : "–"}</b><small>bankroll</small></div></div>
-        <div class="when" style="margin-top:8px">Only bets you placed: picks marked placed, plus your uploaded slips. ${h.unit ? `1u = $${h.unit}.` : ""}${notPlaced ? ` ${notPlaced} graded pick${notPlaced === 1 ? "" : "s"} you didn't place ${notPlaced === 1 ? "isn't" : "aren't"} counted.` : ""}</div>${bhChart(rows, true)}</div>`
+        <ul class="bh-list"><li>Only picks you placed, plus your slips</li>${h.unit ? `<li>1 unit = $${h.unit}</li>` : ""}${notPlaced ? `<li>${notPlaced} graded pick${notPlaced === 1 ? "" : "s"} not placed, not counted</li>` : ""}</ul>${bhChart(rows, true)}</div>`
       : `<div class="card"><div class="stat"><div><b>${s.rec}</b><small>W-L</small></div><div><b>${s.graded ? fmtU(s.units) : "–"}</b><small>units</small></div><div><b>${s.roi === null ? "–" : Math.round(s.roi) + "%"}</b><small>ROI</small></div><div><b>${s.clv}</b><small>CLV</small></div></div>
-        <div class="when" style="margin-top:8px">Every pick recommended, placed or not, in units. This is how good the picks are, not your money.</div>${bhChart(rows)}</div>`}
+        <ul class="bh-list"><li>Every pick, placed or not, in units</li><li>How good the picks are, not your money</li></ul>${bhChart(rows)}</div>`}
       <div class="bh-chips" id="bhF">${[["all", "All"], ["singles", "Singles"], ["parlays", "Parlays"], ["pending", "Open"]].map(([k, l]) => `<button data-f="${k}" class="${BH.filter === k ? "on" : ""}">${l}</button>`).join("")}</div>
       ${sports.length > 1 ? `<div class="bh-chips" id="bhS">${["all", ...sports].map(k => `<button data-s="${esc(k)}" class="${BH.sport === k ? "on" : ""}">${k === "all" ? "Every sport" : esc(k)}</button>`).join("")}</div>` : ""}
       ${bhAssets ? `<div class="acts" style="margin:4px 0 2px"><button id="bhUp">Upload bet slip</button></div>` : `<div class="empty">Slip uploads work in the Claude app.</div>`}
       ${Object.keys(days).length ? Object.entries(days).map(([d, rs]) => `<div class="bh-day">${dayName(d)}</div><div class="card" style="padding:4px 14px">${rs.map(bhRowHTML).join("")}</div>`).join("") : `<div class="empty">${mine ? "No placed bets yet. Upload a bet slip so it counts." : "No bets match."}</div>`}
       ${BH.filter === "all" && BH.sport === "all" && !mine ? bhBreak(all, "sport", "By sport") + bhBreak(all.filter(r => !r.parlay), "conf", "By confidence (singles)") : ""}
       <h2><span>Bet slips</span></h2>${BH.slips.length ? `<div class="bh-slips">${BH.slips.slice().reverse().map(s => `<img src="${esc(bhSlipUrl(s))}" data-slip="${esc(s.assetId)}" alt="bet slip">`).join("")}</div>` : '<div class="empty">Upload a screenshot of a bet slip and Claude reads the bets off it.</div>'}
-      <div class="when" style="margin-top:14px">History keeps every bet the picks log has shown, even after the log rolls older ones into its totals. A bet counts as yours once a slip shows it.</div>`;
+      <ul class="bh-list" style="margin-top:14px"><li>Keeps every bet the picks log has shown, even after it's archived</li><li>A bet counts as yours once you tick it or a slip shows it</li></ul>`;
     f.querySelectorAll("#bhV button").forEach(b => b.onclick = () => { BH.view = b.dataset.v; draw(); });
     f.querySelectorAll("#bhF button").forEach(b => b.onclick = () => { BH.filter = b.dataset.f; draw(); });
     f.querySelectorAll("#bhS button").forEach(b => b.onclick = () => { BH.sport = b.dataset.s; draw(); });
@@ -284,9 +286,9 @@ function bhLogCard(log) {
   const v = BH.view; BH.view = "picks";
   const body = dates.map(x => `<div class="bh-day">${dayName(x)}</div>${rows.filter(r => r.date === x).sort((a, b) => a.slip - b.slip || a.parlay - b.parlay).map(bhRowHTML).join("")}`).join("");
   BH.view = v;
-  const line = (k, t) => t ? `<div class="when" style="margin-top:4px"><b style="color:var(--ink)">${k}</b> ${esc(t)}</div>` : "";
+  const line = (k, t) => t ? `<div class="bh-k">${k}</div><ul class="bh-list">${t.split(/\s+\|\s+/).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
   return `<div class="card"><div class="stat"><div><b>${h.placedBank ? "$" + h.placedBank : "–"}</b><small>placed bankroll</small></div><div><b>${h.bankroll ? "$" + h.bankroll : "–"}</b><small>picks bankroll</small></div><div><b>${h.unit ? "$" + h.unit : "–"}</b><small>1 unit</small></div></div>
-    <div class="when">Check off the picks you placed (edit the odds or line if yours were different).</div>
+    <div class="when" style="margin-top:6px">Tick the picks you placed. Change the odds or line if yours were different.</div>
     ${line("Your bets:", h.mine)}${line("All picks:", h.picks)}${line("CLV:", h.clv)}
     ${body || '<div class="empty">No picks logged yet.</div>'}
     <div class="acts"><button data-open="bethistory">Full bet history</button></div></div>`;
