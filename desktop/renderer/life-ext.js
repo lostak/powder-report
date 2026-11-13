@@ -330,7 +330,8 @@ function golfState() {
   const d = String(GOLF?.description || ""), L = (re) => [...d.matchAll(re)];
   return {
     courses: L(/^\s*COURSE:\s*(.+?)\s*$/gm).map(m => m[1]),
-    wants: L(/^\s*WANT:\s*(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})\s+(\d)\s*players?/gim).map(m => ({ date: m[1], from: m[2], to: m[3], n: +m[4], raw: m[0].trim() })),
+    // a WANT may name its own courses ("… 4 players at Kennedy"): that day is watched at those courses only
+    wants: L(/^\s*WANT:\s*(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})\s+(\d)\s*players?(?:\s+(?:at|only)\s+(.+?))?\s*$/gim).map(m => ({ date: m[1], from: m[2], to: m[3], n: +m[4], at: m[5] || "", raw: m[0].trim() })),
     found: L(/^\s*FOUND:\s*(\d{4}-\d{2}-\d{2})\s+(.+?)\s+(\d{1,2}:\d{2}\s*[AP]M)(.*)$/gim).map(m => ({ date: m[1], course: m[2], time: m[3], rest: m[4].trim() })),
     checked: (d.match(/^\s*LAST CHECKED:\s*(.+)$/m) || [])[1] || "",
     season: (d.match(/^\s*SEASON:\s*(.+)$/m) || [])[1] || "", seasonNote: (d.match(/^\s*SEASON-NOTE:\s*(.+)$/m) || [])[1] || "",
@@ -340,7 +341,7 @@ async function saveGolf(mut) {
   if (!GOLF) { const l = golfLocal(); if (l) GOLF = { id: l.id, description: l.description }; }
   const s = golfState(); mut(s);
   const body = ["Tee-time watch for the Life app. The tee-time task checks these courses for the WANT days and adds FOUND lines.",
-    ...s.courses.map(c => "COURSE: " + c), ...s.wants.map(w => `WANT: ${w.date} ${w.from}-${w.to} ${w.n} player${w.n > 1 ? "s" : ""}`),
+    ...s.courses.map(c => "COURSE: " + c), ...s.wants.map(w => `WANT: ${w.date} ${w.from}-${w.to} ${w.n} player${w.n > 1 ? "s" : ""}${w.at ? " at " + w.at : ""}`),
     ...s.found.map(f => `FOUND: ${f.date} ${f.course} ${f.time}${f.rest ? " " + f.rest : ""}`), s.season ? "SEASON: " + s.season : "", s.seasonNote ? "SEASON-NOTE: " + s.seasonNote : "", s.checked ? "LAST CHECKED: " + s.checked : "", "GOLF-WATCH"].filter(Boolean).join("\n");
   GOLF = { ...(GOLF || {}), summary: "Personal: golf watch", description: body }; golfKeep(GOLF);
   if (tab === "golf") renderGolf();
@@ -459,7 +460,7 @@ function renderGolf() {
       || `<div class="empty">Nothing yet. You'll get a notification when a tee time opens on a day you want. Tap it, then "Book it" to open the course's own tee sheet.</div>`,
       `<button class="l" data-golf="addbooked">+ I booked a tee time myself</button>`)
     + section("Days you want to play", wants.map(w => `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="t">${esc(dayName(w.date))}</div>
-        <div class="when">${esc(w.from)}–${esc(w.to)} · ${w.n} player${w.n > 1 ? "s" : ""} · ${g.found.filter(f => f.date === w.date).length} found</div></div><button class="l" data-golf="rmwant" data-v="${esc(w.raw)}">Remove</button></div>
+        <div class="when">${esc(w.from)}–${esc(w.to)} · ${w.n} player${w.n > 1 ? "s" : ""}${w.at ? " · only " + esc(w.at.replace(/;\s*/g, ", ")) : ""} · ${g.found.filter(f => f.date === w.date).length} found</div></div><button class="l" data-golf="rmwant" data-v="${esc(w.raw)}">Remove</button></div>
         ${teeTimeline(w, g.found)}</div>`).join(""), `<button class="l" data-golf="addwant">+ Add a day</button>`)
     + section("Courses you'd play", `<div class="card"><div class="setpick">${g.courses.map(c => `<label>⛳ ${esc(c)} <button class="l" data-golf="rmcourse" data-v="${esc(c)}" style="padding:0 2px">✕</button></label>`).join("") || '<div class="empty">Add the public courses you want watched.</div>'}</div>
         <div class="acts"><button data-golf="addcourse">+ Add a course</button></div>${g.checked ? `<div class="when" style="margin-top:6px">Last checked: ${esc(g.checked)}</div>` : ""}</div>`)
