@@ -33,7 +33,7 @@
   .bh-ed input{width:78px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14px}
   .bh-ed button{padding:6px 12px;font-size:12.5px;border-radius:99px}`; document.head.append(st); })();
 
-const BH = { rows: {}, slips: [], loaded: false, filter: "all", sport: "all", view: "mine" };
+const BH = { rows: {}, slips: [], loaded: false, filter: "all", sport: "all", view: "mine", all: false };
 // a bet counts as yours only when the log says you placed it, or it came from one of your slips
 const bhMine = (r) => r.slip || r.placed === "yes";
 const bhPlacedLabel = (r) => r.slip ? "" : r.placed === "yes" ? '<span class="pill good">placed</span>' : r.placed === "slip" ? '<span class="pill good">placed (see slip)</span>' : r.placed === "no" ? '<span class="pill">not placed</span>' : r.placed === "not yet" ? '<span class="pill">no slip yet</span>' : "";
@@ -69,7 +69,7 @@ function bhParseLog(desc) {
       book: p[3] || "", conf: (find(/^(Low|Medium|High)/i).match(/^(Low|Medium|High)(-\w+)?/i) || [""])[0],
       stakeU: slip ? null : parseFloat(stake) || null, stake$: slip ? parseFloat(slipStake) || null : parseFloat((stake.match(/\$(\d+(?:\.\d+)?)/) || [])[1]) || null, placed,
       status, units: isNaN(units) ? null : units, dollars: dm && (slip || placed === "yes") ? (dm[1] === "-" ? -1 : 1) * parseFloat(dm[2]) : slip && /^push/i.test(slipSt) ? 0 : null,
-      clv: /(did not|didn't|missed|worse than|lost to) (beat )?(the )?close/i.test(close) ? false : /beat (the )?close/i.test(close) ? true : null,
+      clv: /(did not|didn't|missed|worse than|lost to)\b/i.test(close) ? false : /\bbeat\b/i.test(close) ? true : null,
       close: close.replace(/^close:\s*/i, ""), result: slip ? slipSt : res.replace(/^result:\s*/i, ""), sport, start: find(/\d{1,2}:\d{2} [AP]M/) });
   }
   return rows;
@@ -83,13 +83,19 @@ async function bhLoad() {
     const [r, s] = await Promise.all([cloudGet("betrows"), cloudGet("betslips")]);
     BH.rows = r?.rows || bhLocal("rows") || {}; BH.slips = s?.items || bhLocal("slips") || []; BH.loaded = true;
   }
-  const log = LOGS["Personal: picks log"]; let changed = false;
-  const unit = parseFloat(bhHeader(log?.description).unit) || 2;
+  const log = LOGS["Personal: picks log"]; if (!log) return;   // calendar not loaded yet; AFTER_RELOAD calls again
+  const unit = parseFloat(bhHeader(log.description).unit) || 2;
   const archived = (typeof ARCHIVES !== "undefined" ? ARCHIVES : []).flatMap(e => bhParseLog(e.description));
-  for (const row of [...archived, ...bhParseLog(log?.description)]) {
+  // the picks log + its archives are the truth for every day they cover; saved rows only fill in days older than that
+  // (a saved copy from earlier in the week had Nov 6–7 still pending and was hiding everything newer)
+  const fresh = {};
+  for (const row of [...archived, ...bhParseLog(log.description)]) {
     if (row.slip) { row.stakeU = row.stake$ ? Math.round(row.stake$ / unit * 100) / 100 : null; row.units = row.dollars !== null ? Math.round(row.dollars / unit * 100) / 100 : null; }
-    const k = (row.slip ? "slip|" : "") + bhKey(row); if (JSON.stringify(BH.rows[k]) !== JSON.stringify(row)) { BH.rows[k] = row; changed = true; } }
-  if (changed) { bhLocal("rows", BH.rows); cloudSet("betrows", { rows: BH.rows, at: Date.now() }); }
+    fresh[(row.slip ? "slip|" : "") + bhKey(row)] = row;
+  }
+  const first = Object.values(fresh).map(r => r.date).sort()[0];
+  const next = { ...Object.fromEntries(Object.entries(BH.rows).filter(([, r]) => first && r.date < first)), ...fresh };
+  if (JSON.stringify(next) !== JSON.stringify(BH.rows)) { BH.rows = next; bhLocal("rows", BH.rows); cloudSet("betrows", { rows: BH.rows, at: Date.now() }); }
 }
 const bhSlipUrl = (s) => s.url || "/_blob/" + s.assetId;
 function bhSlipFor(row) {
@@ -127,7 +133,7 @@ function bhRowHTML(r) {
   const sl = bhSlipFor(r), pl = r.status === "pending" ? "" : r.units !== null ? fmtU(r.units) : "";
   return `<div class="bh-row"><div class="bh-res ${r.status}">${r.status === "pending" ? "…" : r.status}</div>
     <div><div class="bh-bet">${r.parlay ? "🔗 Parlay: " : ""}${esc(r.bet)}${sl ? `<img class="bh-thumb" src="${esc(bhSlipUrl(sl))}" data-slip="${esc(sl.assetId)}" alt="slip">` : ""}</div>
-      <div class="bh-sub">${esc([r.slip ? "from your slip" : "", r.price, r.book, r.slip ? (r.stake$ ? `$${r.stake$.toFixed(2)} stake` : "") : r.stakeU ? r.stakeU + "u" + (r.stake$ && bhMine(r) ? ` ($${r.stake$})` : "") : "", r.conf].filter(Boolean).join(" · "))}${BH.view === "picks" && bhPlacedLabel(r) ? " · " + bhPlacedLabel(r) : ""}${r.clv === true ? ' · <span class="pill good">beat close</span>' : r.clv === false ? ' · <span class="pill bad">missed close</span>' : ""}</div>
+      <div class="bh-sub">${esc([r.slip ? "from your slip" : "", r.price, r.book, r.slip ? (r.stake$ ? `$${r.stake$.toFixed(2)} stake` : "") : r.stakeU ? r.stakeU + "u" + (r.stake$ && bhMine(r) ? ` ($${r.stake$})` : "") : "", r.conf].filter(Boolean).join(" · "))}${BH.view === "picks" && r.slip && bhPlacedLabel(r) ? " · " + bhPlacedLabel(r) : ""}${r.clv === true ? ' · <span class="pill good">beat close</span>' : r.clv === false ? ' · <span class="pill bad">missed close</span>' : ""}</div>
       ${r.result && r.status !== "pending" && !r.slip ? `<div class="bh-sub">${esc(r.result.replace(/\s*[+-]\d+(\.\d+)?u.*$/, ""))}</div>` : ""}
       ${BH.view === "picks" && !r.slip ? bhPlaceBox(r) : ""}</div>
     <div class="bh-pl ${r.units > 0 ? "up" : r.units < 0 ? "dn" : ""}">${BH.view === "mine" && r.dollars !== null && r.status !== "pending" ? fmtD(r.dollars) + (pl ? `<small>${pl}</small>` : "") : pl + (r.dollars !== null && r.status !== "pending" && bhMine(r) ? `<small>${fmtD(r.dollars)}</small>` : r.status === "pending" ? `<small>${esc(r.start || "pending")}</small>` : "")}</div></div>`;
@@ -146,24 +152,27 @@ async function openBetHistory() {
     const sports = [...new Set(all.map(r => r.sport))].filter(s => s !== "Parlay");
     const rows = all.filter(r => (BH.filter === "all" || (BH.filter === "singles" ? !r.parlay : BH.filter === "parlays" ? r.parlay : r.status === "pending")) && (BH.sport === "all" || r.sport === BH.sport));
     const s = bhStats(rows), h = bhHeader(LOGS["Personal: picks log"]?.description), notPlaced = every.filter(r => !r.slip && r.placed === "no" && r.status !== "pending").length;
-    const days = {}; for (const r of rows) (days[r.date] ||= []).push(r);
+    const LIMIT = 5, showAll = BH.all, list = showAll ? rows : rows.slice(0, LIMIT);
+    const days = {}; for (const r of list) (days[r.date] ||= []).push(r);
     const dayName = (d) => new Date(d + "T12:00:00").toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
     f.querySelector("#bhBody").innerHTML = `
       <div class="bh-chips" id="bhV">${[["mine", "Your bets"], ["picks", "All picks"]].map(([k, l]) => `<button data-v="${k}" class="${BH.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
-      ${mine ? `<div class="card"><div class="stat"><div><b>${s.graded ? s.rec : "–"}</b><small>W-L</small></div><div><b>${s.graded ? fmtD(s.dollars) : "–"}</b><small>profit</small></div><div><b>${s.roi$ === null ? "–" : Math.round(s.roi$) + "%"}</b><small>ROI</small></div><div><b>${h.bankroll ? "$" + h.bankroll : "–"}</b><small>bankroll</small></div></div>
+      ${mine ? `<div class="card"><div class="stat"><div><b>${s.graded ? s.rec : "–"}</b><small>W-L</small></div><div><b>${s.graded ? fmtD(s.dollars) : "–"}</b><small>profit</small></div><div><b>${s.roi$ === null ? "–" : Math.round(s.roi$) + "%"}</b><small>ROI</small></div><div><b>${h.placedBank ? "$" + h.placedBank : "–"}</b><small>placed bankroll</small></div></div>
         <ul class="bh-list"><li>Only picks you placed, plus your slips</li>${h.unit ? `<li>1 unit = $${h.unit}</li>` : ""}${notPlaced ? `<li>${notPlaced} graded pick${notPlaced === 1 ? "" : "s"} not placed, not counted</li>` : ""}</ul>${bhChart(rows, true)}</div>`
       : `<div class="card"><div class="stat"><div><b>${s.rec}</b><small>W-L</small></div><div><b>${s.graded ? fmtU(s.units) : "–"}</b><small>units</small></div><div><b>${s.roi === null ? "–" : Math.round(s.roi) + "%"}</b><small>ROI</small></div><div><b>${s.clv}</b><small>CLV</small></div></div>
         <ul class="bh-list"><li>Every pick, placed or not, in units</li><li>How good the picks are, not your money</li></ul>${bhChart(rows)}</div>`}
       <div class="bh-chips" id="bhF">${[["all", "All"], ["singles", "Singles"], ["parlays", "Parlays"], ["pending", "Open"]].map(([k, l]) => `<button data-f="${k}" class="${BH.filter === k ? "on" : ""}">${l}</button>`).join("")}</div>
       ${sports.length > 1 ? `<div class="bh-chips" id="bhS">${["all", ...sports].map(k => `<button data-s="${esc(k)}" class="${BH.sport === k ? "on" : ""}">${k === "all" ? "Every sport" : esc(k)}</button>`).join("")}</div>` : ""}
       ${bhAssets ? `<div class="acts" style="margin:4px 0 2px"><button id="bhUp">Upload bet slip</button></div>` : `<div class="empty">Slip uploads work in the Claude app.</div>`}
-      ${Object.keys(days).length ? Object.entries(days).map(([d, rs]) => `<div class="bh-day">${dayName(d)}</div><div class="card" style="padding:4px 14px">${rs.map(bhRowHTML).join("")}</div>`).join("") : `<div class="empty">${mine ? "No placed bets yet. Upload a bet slip so it counts." : "No bets match."}</div>`}
+      ${Object.keys(days).length ? Object.entries(days).map(([d, rs]) => `<div class="bh-day">${dayName(d)}</div><div class="card" style="padding:4px 14px">${rs.map(bhRowHTML).join("")}</div>`).join("") : `<div class="empty">${!LOGS["Personal: picks log"] ? "Loading your picks…" : mine ? "No placed bets yet. Tick a pick or upload a bet slip." : "No bets match."}</div>`}
+      ${rows.length > LIMIT ? `<div class="acts" style="justify-content:center;margin:6px 0 4px"><button class="g" id="bhMore">${showAll ? "Show fewer" : `Show all ${rows.length} ${mine ? "bets" : "picks"}`}</button></div>` : ""}
       ${BH.filter === "all" && BH.sport === "all" && !mine ? bhBreak(all, "sport", "By sport") + bhBreak(all.filter(r => !r.parlay), "conf", "By confidence (singles)") : ""}
       <h2><span>Bet slips</span></h2>${BH.slips.length ? `<div class="bh-slips">${BH.slips.slice().reverse().map(s => `<img src="${esc(bhSlipUrl(s))}" data-slip="${esc(s.assetId)}" alt="bet slip">`).join("")}</div>` : '<div class="empty">Upload a screenshot of a bet slip and Claude reads the bets off it.</div>'}
       <ul class="bh-list" style="margin-top:14px"><li>Keeps every bet the picks log has shown, even after it's archived</li><li>A bet counts as yours once you tick it or a slip shows it</li></ul>`;
-    f.querySelectorAll("#bhV button").forEach(b => b.onclick = () => { BH.view = b.dataset.v; draw(); });
-    f.querySelectorAll("#bhF button").forEach(b => b.onclick = () => { BH.filter = b.dataset.f; draw(); });
-    f.querySelectorAll("#bhS button").forEach(b => b.onclick = () => { BH.sport = b.dataset.s; draw(); });
+    f.querySelectorAll("#bhV button").forEach(b => b.onclick = () => { BH.view = b.dataset.v; BH.all = false; draw(); });
+    f.querySelectorAll("#bhF button").forEach(b => b.onclick = () => { BH.filter = b.dataset.f; BH.all = false; draw(); });
+    f.querySelectorAll("#bhS button").forEach(b => b.onclick = () => { BH.sport = b.dataset.s; BH.all = false; draw(); });
+    f.querySelector("#bhMore")?.addEventListener("click", () => { BH.all = !BH.all; draw(); });
     f.querySelector("#bhUp")?.addEventListener("click", () => bhUpload(draw));
     f.querySelectorAll("[data-slip]").forEach(i => i.onclick = (e) => { e.stopPropagation(); bhViewSlip(i.dataset.slip); });
   };
