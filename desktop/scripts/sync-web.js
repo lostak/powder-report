@@ -6,7 +6,7 @@ fs.copyFileSync(path.join(__dirname, "..", "..", "web", "life-ext.js"), path.joi
 console.log("Copied web/life-ext.js → renderer/life-ext.js");
 fs.copyFileSync(path.join(__dirname, "..", "..", "web", "bets-ext.js"), path.join(__dirname, "..", "renderer", "bets-ext.js"));
 console.log("Copied web/bets-ext.js → renderer/bets-ext.js");
-for (const f of ["wide.css", "wide.js", "theme.css", "theme.js"]) {
+for (const f of ["wide.css", "wide.js", "theme.css", "theme.js", "skin.css"]) {
   fs.copyFileSync(path.join(__dirname, "..", "..", "web", f), path.join(__dirname, "..", "renderer", f));
   console.log(`Copied web/${f} → renderer/${f}`);
 }

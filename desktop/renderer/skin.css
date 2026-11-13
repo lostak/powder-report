@@ -1,0 +1,170 @@
+/* My Life – "Trailhead" skin. Loaded last; restyles the whole app without touching its markup.
+   Idea: Bradley's life as a Colorado trail map. Colorado-flag navy, gold and red on snow (light) or night skiing (dark);
+   a trailhead sign with topo contours as the header; trail-difficulty shapes as status markers
+   (● green circle = fine / won, ■ blue square = heads-up, ◆ diamond = needs attention / lost);
+   a gold trail blaze marks each section. Big Shoulders Display for headings and numbers, Overpass (from the US highway-sign face) for text. */
+
+:root {
+  --disp: "Big Shoulders Display", "Barlow Condensed", Impact, sans-serif;
+  --body: "Overpass", system-ui, -apple-system, sans-serif;
+  /* night skiing */
+  --bg: #0a1a30; --panel: #10243f; --panel2: #18304f; --line: #24426b; --ink: #eef3f9; --mute: #94a9c6;
+  --acc: #f6c343; --btn: #f6c343; --btn-ink: #0b1d38; --good: #3dd68c; --warn: #84b6ff; --bad: #ff5f64;
+  --gold: #f6c343; --red: #e2263a; --navy: #0e2a5c; --sign: #0c2550; --sign-ink: #f4f7fb; --topo: #ffffff14;
+  --desc: #c9d6e8; --radius: 6px;
+}
+html[data-theme="light"] {
+  /* bluebird day: cold snow, not cream */
+  --bg: #e7eff6; --panel: #ffffff; --panel2: #eef3f8; --line: #d3dfeb; --ink: #0e2a5c; --mute: #5a6d8b;
+  --acc: #1d5cc4; --btn: #0e2a5c; --btn-ink: #ffffff; --good: #13804a; --warn: #1d5cc4; --bad: #c8102e;
+  --gold: #e9a800; --red: #c8102e; --sign: #0e2a5c; --topo: #ffffff17; --desc: #2a3f63;
+}
+
+html, body { font-family: var(--body); font-size: 15.5px; line-height: 1.45; background: var(--bg); }
+button, input, textarea, select { font-family: var(--body); }
+.wrap { padding-top: 0; }
+
+/* ---- the trailhead sign (header) ---- */
+header {
+  position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+  margin: 0 -12px 18px; padding: 22px 16px 18px; color: var(--sign-ink);
+  background-color: var(--sign);
+  background-image:
+    linear-gradient(180deg, var(--sign) 0 6px, #fff 6px 9px, var(--sign) 9px),   /* flag stripe */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='180' viewBox='0 0 420 180' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.3'%3E%3Cpath d='M-10 150c40-30 70-38 110-30s70 30 120 22 70-48 120-56 70 10 90 4'/%3E%3Cpath d='M-10 128c40-28 74-34 112-26s66 26 114 18 72-46 118-52 72 8 96 2'/%3E%3Cpath d='M-10 106c42-26 78-30 114-22s62 22 108 14 74-44 116-48 74 6 102 0'/%3E%3Cpath d='M-10 84c44-24 82-26 116-18s58 18 102 10 76-42 114-44 76 4 108-2'/%3E%3Cpath d='M30 62c30-14 56-14 80-8s40 12 70 6 54-30 82-30'/%3E%3Cpath d='M70 42c22-10 40-8 58-4s30 8 50 2'/%3E%3Cellipse cx='300' cy='56' rx='26' ry='12'/%3E%3Cellipse cx='300' cy='56' rx='12' ry='5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, repeat-x; background-position: 0 0, right -40px bottom -10px; background-size: 100% 100%, 420px 180px;
+  border-radius: 0 0 20px 20px;
+}
+header > div:first-child { min-width: 0; }
+h1 { font: 900 40px/0.9 var(--disp); text-transform: none; letter-spacing: 0; color: var(--sign-ink); display: flex; align-items: center; gap: 10px; }
+h1 span { color: var(--gold); }
+/* the flag "C": red ring open to the right, around a gold disc */
+h1::before {
+  content: ""; flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle, var(--gold) 0 7px, transparent 7.5px),
+              conic-gradient(from 135deg, transparent 0 25%, #e2263a 25% 100%);
+  -webkit-mask: radial-gradient(circle, #000 0 7.5px, transparent 8px 9px, #000 9.5px);
+          mask: radial-gradient(circle, #000 0 7.5px, transparent 8px 9px, #000 9.5px);
+}
+header .sub { color: #c8d6ee; font-size: 13.5px; margin-top: 8px; }
+header > div:last-child { display: flex; gap: 6px; flex: none; align-items: center; }
+header button, header button.g { background: #ffffff1a; color: #fff; box-shadow: inset 0 0 0 1px #ffffff30; padding: 0; width: 36px; height: 36px; font-size: 15px; }
+header button:not(.g) { background: var(--gold); color: #0b1d38; box-shadow: none; width: auto; padding: 0 14px; }
+
+/* ---- section headings: a gold trail blaze, then the name in the sign face ---- */
+h2 { font: 800 24px/1 var(--disp); text-transform: none; letter-spacing: .2px; color: var(--ink); margin: 26px 2px 8px; }
+h2 > span:first-child::before, h2:not(:has(> span))::before {
+  content: ""; display: inline-block; width: 7px; height: 17px; margin-right: 9px; border-radius: 2px;
+  background: var(--gold); vertical-align: -1px;
+}
+h2 button { font: 700 13px var(--body); background: none; color: var(--acc); padding: 4px 2px; }
+
+/* ---- cards ---- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 15px; box-shadow: none; }
+.t { font-weight: 700; font-size: 16px; line-height: 1.3; }
+.when { color: var(--mute); font-size: 12.5px; }
+.desc { color: var(--desc); font-size: 14px; }
+.tap { border-color: var(--line); border-left: 4px solid var(--gold); }
+.tap .go { color: var(--acc); font-weight: 700; }
+.ask { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; }
+html[data-theme="light"] .ask { background: #fff; border-color: #c9d8e8; }
+.ask input { border-radius: 999px; padding-left: 16px; }
+.sugs button { border-radius: 999px; background: transparent; border: 1px solid var(--line); color: var(--ink); font-weight: 400; }
+
+/* ---- buttons: pills, so they never look like the cards ---- */
+button { font: 700 13.5px var(--body); border-radius: 999px; padding: 9px 15px; background: var(--btn); color: var(--btn-ink); }
+button.g { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+button.l { background: none; color: var(--acc); box-shadow: none; }
+.more { color: var(--acc); font-weight: 700; }
+.box { border-radius: 4px; border-color: var(--mute); }
+.box.on { background: var(--good); border-color: var(--good); }
+
+/* ---- trail markers instead of colored pills ---- */
+.pill { font: 700 11.5px var(--body); background: transparent; color: var(--mute); padding: 1px 6px 1px 0; border-radius: 0; text-transform: none; }
+.pill::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: 0; background: var(--mute); border-radius: 2px; }
+.pill.good { color: var(--good); } .pill.good::before { background: var(--good); border-radius: 50%; }
+.pill.warn { color: var(--warn); } .pill.warn::before { background: var(--warn); border-radius: 1px; }
+.pill.bad { color: var(--bad); } .pill.bad::before { background: var(--bad); transform: rotate(45deg) scale(.9); border-radius: 1px; }
+
+/* ---- numbers: scoreboard digits, sentence-case labels ---- */
+.stat { gap: 8px; }
+.stat div { background: var(--panel2); border-radius: var(--radius); padding: 10px 6px 8px; }
+.stat b { font: 900 clamp(22px, 6.6vw, 30px)/1 var(--disp); color: var(--ink); letter-spacing: .3px; white-space: nowrap; }
+html[data-theme="light"] .stat b { color: var(--ink); }
+.stat small { text-transform: none; font-size: 11.5px; color: var(--mute); letter-spacing: 0; }
+.stat div:first-child b { color: var(--gold); }
+html[data-theme="light"] .stat div:first-child b { color: var(--navy); }
+
+.big { font: 900 40px/0.95 var(--disp); text-transform: none; letter-spacing: 0; }
+.kicker { text-transform: none; letter-spacing: 0; font-weight: 700; color: var(--acc); font-size: 13px; }
+.rich .lab { text-transform: none; letter-spacing: .2px; font: 800 15px/1.1 var(--disp); color: var(--acc); margin-top: 14px; }
+.rt th { text-transform: none; font-size: 11.5px; }
+.timer { font: 900 110px/1 var(--disp); }
+.phase { font: 800 30px/1 var(--disp); text-transform: none; letter-spacing: .3px; }
+.phase.work { color: var(--gold); }
+.ctr .v { font: 900 34px/1 var(--disp); }
+.bar i { background: var(--gold); }
+.steps span { border-radius: 999px; }
+.steps span.on { background: var(--btn); color: var(--btn-ink); }
+.move .n { background: var(--panel2); color: var(--ink); border-radius: 4px; }
+.rich .dt { color: var(--acc); }
+
+/* ---- bottom navigation: a navy trail sign; the open tab gets the gold disc ---- */
+nav { background: var(--sign); border-top: 0; backdrop-filter: none; box-shadow: 0 -1px 0 #ffffff12; }
+nav button { font: 700 15px/1 var(--disp); letter-spacing: .3px; color: #a9bbd6; padding: 16px 0 18px; position: relative; }
+nav button.on { color: #fff; box-shadow: none; }
+nav button.on::after { content: ""; position: absolute; left: 50%; top: 7px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--gold); }
+
+/* ---- sheets, toasts ---- */
+.sheet { border-radius: 18px 18px 0 0; }
+.sheet::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: -6px auto 12px; }
+.toast { background: var(--sign); color: #fff; border-radius: 999px; padding: 11px 18px; font-weight: 700; box-shadow: 0 6px 24px #0006; }
+input, textarea, select { border-radius: var(--radius); }
+
+/* ---- bet history: results as trail markers ---- */
+.bh-day { font: 800 16px/1 var(--disp); text-transform: none; letter-spacing: .2px; color: var(--ink); }
+.bh-res { font: 900 15px/1 var(--disp); border-radius: 50%; width: 30px; height: 30px; }
+.bh-res.W { background: var(--good); color: #062a17; border-radius: 50%; }
+.bh-res.L { background: var(--bad); color: #fff; border-radius: 3px; transform: rotate(45deg) scale(.82); }
+.bh-res.L { font-size: 0; }
+.bh-res.L::after { content: "L"; font: 900 15px/1 var(--disp); transform: rotate(-45deg); }
+.bh-res.P { background: var(--warn); color: #062044; border-radius: 3px; }
+.bh-res.pending { background: transparent; box-shadow: inset 0 0 0 2px var(--line); color: var(--mute); }
+.bh-pl { font: 900 19px/1.1 var(--disp); }
+.bh-pl small { font-family: var(--body); }
+.bh-chips button, .bh-chips button.on { border-radius: 999px; }
+.bh-chips button { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--mute); }
+.bh-chips button.on { background: var(--btn); color: var(--btn-ink); box-shadow: none; }
+.bh-pbox input[type=checkbox] { accent-color: var(--good); }
+
+/* ---- wide windows (desktop app): the sidebar is the trailhead sign ---- */
+@media (min-width: 1000px) {
+  .wrap { padding-top: 26px; }
+  header { margin: 0 0 18px; padding: 0; background: none; border-radius: 0; color: var(--ink); }
+  header .sub { font: 800 30px/1 var(--disp); color: var(--ink); margin: 0; }
+  header button, header button.g { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); width: 40px; height: 40px; }
+  header button:not(.g) { background: var(--btn); color: var(--btn-ink); box-shadow: none; width: auto; padding: 0 18px; }
+  .stat b { font-size: 30px; }
+  nav {
+    background-color: var(--sign);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='232' height='600' viewBox='0 0 232 600' fill='none' stroke='white' stroke-opacity='.08' stroke-width='1.2'%3E%3Cpath d='M-10 560c40-40 60-90 110-100s80 30 140-10'/%3E%3Cpath d='M-10 520c40-36 66-82 112-90s76 26 136-12'/%3E%3Cpath d='M-10 480c40-32 72-74 114-80s72 22 132-14'/%3E%3Cpath d='M-10 440c42-28 78-66 116-70s68 18 128-16'/%3E%3Cpath d='M20 396c34-24 66-50 96-52s56 12 100-12'/%3E%3Cellipse cx='120' cy='330' rx='34' ry='14'/%3E%3Cellipse cx='120' cy='330' rx='16' ry='6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: bottom; border-right: 0; box-shadow: none;
+  }
+  html[data-theme="light"] nav { background-color: var(--sign); }
+  nav .brand { font: 900 34px/0.9 var(--disp); text-transform: none; letter-spacing: 0; color: #fff; display: flex; align-items: center; gap: 10px; padding: 6px 12px 28px; }
+  nav .brand span { color: var(--gold); }
+  nav .brand::before { content: ""; flex: none; width: 28px; height: 28px; border-radius: 50%;
+    background: radial-gradient(circle, var(--gold) 0 6.5px, transparent 7px), conic-gradient(from 135deg, transparent 0 25%, #e2263a 25% 100%);
+    -webkit-mask: radial-gradient(circle, #000 0 7px, transparent 7.5px 8.5px, #000 9px); mask: radial-gradient(circle, #000 0 7px, transparent 7.5px 8.5px, #000 9px); }
+  nav button { font: 700 19px/1 var(--disp); color: #b4c4dc; padding: 12px 14px; border-radius: 999px; }
+  nav button:hover, html[data-theme="light"] nav button:hover { background: #ffffff12; color: #fff; }
+  nav button.on, html[data-theme="light"] nav button.on { background: #ffffff1a; color: #fff; }
+  nav button.on::after { position: static; margin-left: auto; width: 8px; height: 8px; }
+  .tap:hover { background: var(--panel2); border-color: var(--line); border-left-color: var(--gold); }
+  html[data-theme="light"] .tap:hover { background: #f6f9fc; }
+  ::-webkit-scrollbar-thumb { background: var(--line); }
+  .toast { left: calc(50% + var(--side) / 2); }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
