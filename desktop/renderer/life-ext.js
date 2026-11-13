@@ -441,7 +441,10 @@ function wantSheet() {
 function renderGolf() {
   const g = golfState(), t = today();
   const wants = g.wants.filter(w => w.date >= t).sort((a, b) => a.date.localeCompare(b.date));
-  const opened = EV.filter(e => /^Personal: tee time open/.test(title(e)) && !isDone(e)).sort((a, b) => evStart(b) - evStart(a)).slice(0, 6);
+  // an opening for a day that's already gone is no use: hide it (the date is in the title, e.g. "Sat, Nov 14 10:00 AM")
+  const teeDay = (e) => { const m = title(e).match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? (\d{1,2})\b/); if (!m) return null;
+    const now = new Date(), d = new Date(`${m[1]} ${m[2]}, ${now.getFullYear()}`); if (d - now > 200 * 864e5) d.setFullYear(d.getFullYear() - 1); return d.toLocaleDateString("en-CA"); };
+  const opened = EV.filter(e => /^Personal: tee time open/.test(title(e)) && !isDone(e) && !((teeDay(e) || "9") < today())).sort((a, b) => evStart(b) - evStart(a)).slice(0, 6);
   const dayName = (d) => new Date(d + "T12:00").toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
   const booked = EV.filter(e => /^Personal: ⛳ tee time/.test(title(e)) && !isDone(e) && evStart(e) >= +new Date(t + "T00:00")).sort((a, b) => evStart(a) - evStart(b));
   const foundRows = g.found.filter(f => f.date >= t && !opened.some(e => title(e).includes(f.course) && title(e).includes(f.time.replace(/\s+/g, " "))));

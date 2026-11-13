@@ -244,8 +244,8 @@ function fmtDesc(text) {
     const b = l.match(/^(?:[-•*▪]|\d{1,2}[.)])\s+(.*)$/);
     if (b) { (list = list || []).push(b[1]); continue; }
     // "LABEL: rest" → section heading
-    const m = l.match(/^([A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*)$/) || l.match(/^([A-Z][A-Z0-9/ &]{1,14}\s*\([^)]{1,60}\)):\s*(.*)$/);
-    if (m && (/^[A-Z0-9 &/'’()\-?]+$/.test(m[1]) || m[1].split(" ").length <= 4 || /^[A-Z0-9/ &]+\s*\(/.test(m[1]))) {
+    const m = l.match(/^((?:[⚠⛳⭐✅❗️]\uFE0F?\s*)?[A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*)$/) || l.match(/^([A-Z][A-Z0-9/ &]{1,14}\s*\([^)]{1,60}\)):\s*(.*)$/);
+    if (m && (/^[⚠⛳⭐✅❗️\uFE0F\s]*[A-Z0-9 &/'’()\-?]+$/.test(m[1]) || m[1].split(" ").length <= 4 || /^[A-Z0-9/ &]+\s*\(/.test(m[1]))) {
       flush();
       const rest = m[2];
       if (/^sources?$/i.test(m[1])) { out.push(`<div class="src">${inline(rest)}</div>`); continue; }
@@ -332,6 +332,7 @@ const K = {
   inbox: /^Personal: inbox cleanup/, todo: /^Personal to-do/, log: / log$|\(log\)$|^Personal: (life settings|golf watch)$/,
 };
 const kindOf = (e) => { const t = title(e); for (const [k, re] of Object.entries(K)) if (re.test(t)) return k; const d = e.description || "";
+  if (/^[A-Z0-9]+(-[A-Z0-9]+)+$/.test(d.trim().split("\n").pop().trim())) return "log";   // silent logs end in a bare marker (APP-CHECK, TASK-GUARDIAN…)
   if (/UPKEEP:/.test(d)) return "upkeep"; if (/YEARLY-DATE:/.test(d)) return "yearly"; if (/EXPIRES:/.test(d)) return "expires";
   if (/RENEWAL:/.test(d)) return "renewal"; if (/APPT:/.test(d)) return "appt"; if (/^Personal: (ski|ticket|price|show|tee time open|golf courses open)/.test(t)) return "alert"; return "reminder"; };
 const BRIEFS = ["brief", "slate", "lesson", "workout", "pool", "outlook", "reset", "bills", "deliv", "inbox", "log", "todo"];
