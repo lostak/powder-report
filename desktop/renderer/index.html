@@ -468,7 +468,7 @@ function renderSki() {
     + section("Weekend outlook", outlook ? card(outlook) : `<div class="empty">Posts Thursdays at 4:37 PM (Nov–Apr).</div>`, askBtn("Where should I ski this weekend? Use my weekend outlook and powder alerts.", "Ask Claude"))
     + live
     + section("Powder", powder.map(e => card(e, { acts: [{ act: "done", label: "Seen", cls: "g" }] })).join(""))
-    + section("Season", season ? card(season) : "");
+    + ""   // the raw season log used to show here; the "Ski days" card (life-ext.js) shows it properly
   figLoop();
 }
 
