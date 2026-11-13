@@ -70,7 +70,8 @@ async function bhLoad() {
   }
   const log = LOGS["Personal: picks log"]; let changed = false;
   const unit = parseFloat(bhHeader(log?.description).unit) || 2;
-  for (const row of bhParseLog(log?.description)) {
+  const archived = (typeof ARCHIVES !== "undefined" ? ARCHIVES : []).flatMap(e => bhParseLog(e.description));
+  for (const row of [...archived, ...bhParseLog(log?.description)]) {
     if (row.slip) { row.stakeU = row.stake$ ? Math.round(row.stake$ / unit * 100) / 100 : null; row.units = row.dollars !== null ? Math.round(row.dollars / unit * 100) / 100 : null; }
     const k = (row.slip ? "slip|" : "") + bhKey(row); if (JSON.stringify(BH.rows[k]) !== JSON.stringify(row)) { BH.rows[k] = row; changed = true; } }
   if (changed) { bhLocal("rows", BH.rows); cloudSet("betrows", { rows: BH.rows, at: Date.now() }); }

@@ -284,13 +284,15 @@ const LOG_TITLES = ["Personal: pool log", "Personal: ski workout log", "Personal
 async function loadAll(refresh = false) {
   const yr = localISO(addDays(-365)), tmr = localISO(addDays(1));
   const logQ = (q) => listAll(q, yr, tmr, 1, refresh).catch(() => []);
-  const [main, l1, l2, l3, l4, l5, l6, l7, l8, pw, sw, notes] = await Promise.all([
+  const [main, l1, l2, l3, l4, l5, l6, l7, l8, pw, sw, notes, arch] = await Promise.all([
     listAll("Personal", localISO(addDays(-14)), localISO(addDays(31)), 3, refresh),
     logQ("POOL-LOG"), logQ("SKI-LOG"), logQ("BET-LOG"), logQ("PICKS-LOG"), logQ("TICKET-WATCH-LOG"), logQ("BILLERS-LOG"),
     logQ("car log"), logQ("WhoStarts log"),
     logQ("PRICE-WATCH"), logQ("SHOW-WATCH"),
     listAll("Claude", localISO(addDays(-2)), localISO(addDays(7)), 1, refresh).catch(() => []),
+    logQ("PICKS-ARCHIVE"),   // older picks/slips moved out of the picks log (Google cuts descriptions off at ~8,192 chars)
   ]);
+  ARCHIVES = arch.filter(e => /^Personal: picks archive/.test(e.summary || ""));
   EV = main.filter(e => /^(✅\s*)?Personal/.test(e.summary || ""));
   LOGS = {};
   for (const e of [...l1, ...l2, ...l3, ...l4, ...l5, ...l6, ...l7, ...l8, ...main]) {
@@ -1228,6 +1230,7 @@ function calErr(e) {
 // Phones and desktops keep this page open for days, so it reloads the calendar by itself: when you come back to it,
 // every 5 minutes while it's on screen, and at midnight. Each load bypasses the connector cache. The header always
 // says when the data was loaded, and a failed refresh shows a warning instead of silently leaving old data up.
+let ARCHIVES = [];
 let loading = false, lastLoad = 0, loadFail = null, again = false;
 const AFTER_RELOAD = [];                 // other views (bet history, …) re-read their data here after each load
 const busyTyping = () => { const a = document.activeElement; return !!a && (a.matches?.("input,textarea,select") || a.isContentEditable); };
