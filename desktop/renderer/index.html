@@ -226,7 +226,7 @@ function fmtDesc(text) {
     .split("\n").filter(l => !HIDE_LINE.test(l));
   const out = []; let list = null, table = null;
   const flush = () => {
-    if (list) { out.push(`<ul>${list.map(x => `<li>${item(x)}</li>`).join("")}</ul>`); list = null; }
+    if (list) { out.push(`<ul>${list.map(x => typeof x === "string" ? `<li>${item(x)}</li>` : `<li>${item(x.t)}<ul class="sub">${x.subs.map(s => `<li>${inline(s)}</li>`).join("")}</ul></li>`).join("")}</ul>`); list = null; }
     if (table) { out.push(table.length > 1 ? cellsTable(table) : `<ul>${table[0].map(x => `<li>${item(x)}</li>`).join("")}</ul>`); table = null; }
   };
   for (let raw of lines) {
@@ -242,6 +242,8 @@ function fmtDesc(text) {
     if (table) flush();
     // explicit bullets / numbered / checkbox lines
     const b = l.match(/^(?:[-•*▪]|\d{1,2}[.)])\s+(.*)$/);
+    // an indented bullet under a bullet ("  • reason") belongs to the item above it
+    if (b && list && list.length && /^\s{2,}/.test(raw)) { const last = list[list.length - 1]; if (typeof last === "string") list[list.length - 1] = { t: last, subs: [b[1]] }; else last.subs.push(b[1]); continue; }
     if (b) { (list = list || []).push(b[1]); continue; }
     // "LABEL: rest" → section heading
     const m = l.match(/^((?:[⚠⛳⭐✅❗️]\uFE0F?\s*)?[A-Z][A-Za-z0-9 &/'’()\-?]{1,40}):\s*(.*)$/) || l.match(/^([A-Z][A-Z0-9/ &]{1,14}\s*\([^)]{1,60}\)):\s*(.*)$/);
@@ -1265,7 +1267,7 @@ async function reload(refresh = true) {
   try {
     await loadAll(refresh); lastLoad = Date.now(); loadFail = null; $("#setup").classList.add("hide"); renderAll();
     for (const f of AFTER_RELOAD) { try { await f(); } catch {} }
-  } catch (e) { loadFail = e; if (!lastLoad) setup(calErr(e)); }
+  } catch (e) { loadFail = e; if (!lastLoad) setup(calErr(e)); if (navigator.onLine !== false && typeof appError === "function") appError("calendar load failed", e?.message || e); }
   finally { loading = false; $("#refresh").disabled = false; freshLine(); if (again) { again = false; reload(true); } }
 }
 let loadedDay = new Date().toDateString();

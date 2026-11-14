@@ -182,3 +182,6 @@ input, textarea, select { border-radius: var(--radius); }
 .rich .lab + ul { margin-top: 2px; }
 .rich p .li-h { display: block; font-weight: 700; }
 .desc.clip { max-height: 26em; }
+.rich ul.sub { margin: 4px 0 2px; padding-left: 16px; font-size: 13.5px; color: var(--desc); }
+.rich ul.sub li { margin: 3px 0; }
+.rich ul.sub li::marker { content: "– "; color: var(--mute); }

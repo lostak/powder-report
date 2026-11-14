@@ -544,3 +544,37 @@ const pendBlock = (k) => { const mine = NOTES.filter(n => pendTab(n.summary || "
     <div class="note" style="margin-top:6px">Your Pocket processor sets ${mine.length > 1 ? "these" : "this"} up at the top of the hour (8 AM–7 PM).</div></div>`; };
 for (const k of Object.keys(TABS)) if (k !== "today") { const f = TABS[k]; TABS[k] = () => { f(); const el = $("#tab-" + k), b = pendBlock(k); if (el && b) el.insertAdjacentHTML("afterbegin", b); }; }
 { const q0 = queue; queue = async (cmd, detail = "") => { NOTES = [{ id: "pending-" + Date.now(), summary: `Claude: personal ${cmd}`, description: "", start: { dateTime: localISO(new Date()) } }, ...NOTES]; renderAll(); return q0(cmd, detail); }; }
+
+// ============ REAL-DEVICE PROBLEM REPORTS ============
+// Script errors, failed calendar refreshes and stale data on Bradley's own phone/desktop go to the silent calendar event
+// "Personal: app errors" (marker APP-ERRORS). The daily app check turns new lines into issues and the App doctor task
+// fixes them – the headless check can't see problems that only happen on his device (old saved data, slow networks…).
+// Same event as the Android app. Never written during the app check itself (its calendar writes are stubbed).
+const APPERR = { q: [], seen: new Set(), last: 0, busy: false };
+const appDevice = () => { const ua = navigator.userAgent; const os = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "other";
+  return `${os} ${/Electron/.test(ua) ? "desktop app" : "browser"} ${innerWidth}px`; };
+function appError(kind, msg) {
+  const m = String(msg || "").replace(/\s+/g, " ").slice(0, 200), k = kind + "|" + m;
+  if (APPERR.seen.has(k) || /ResizeObserver loop|Script error\.?$/.test(m)) return;   // browser noise
+  APPERR.seen.add(k); APPERR.q.push(`${new Date().toISOString()} | ${appDevice()} | ${kind} | ${m}`); setTimeout(appErrFlush, 4000);
+}
+async function appErrFlush() {
+  if (APPERR.busy || !APPERR.q.length || Date.now() - APPERR.last < 5 * 60e3 || typeof mcp === "undefined" || !mcp) return;
+  APPERR.busy = true; const send = APPERR.q.splice(0);
+  try {
+    const now = new Date(), r = await mcp.callTool(CAL, "list_events", { fullText: "APP-ERRORS", startTime: localISO(new Date(+now - 400 * 864e5)), endTime: localISO(new Date(+now + 2 * 864e5)), pageSize: 10 });
+    const ev = (r?.events || []).find(e => (e.summary || "") === "Personal: app errors");
+    if (ev) {
+      const cur = String((await mcp.callTool(CAL, "get_event", { eventId: ev.id }))?.description || ev.description || "").split("\n").filter(l => l.trim() && l.trim() !== "APP-ERRORS");
+      const all = [...cur.slice(0, 1), ...[...cur.slice(1), ...send].slice(-40)];
+      await mcp.callTool(CAL, "update_event", { eventId: ev.id, description: all.join("\n") + "\nAPP-ERRORS" });
+    } else await mcp.callTool(CAL, "create_event", { summary: "Personal: app errors", description: ["Problems seen on Bradley's own devices (newest last). The daily app check reads this.", ...send, "APP-ERRORS"].join("\n"), startTime: localISO(now), endTime: localISO(new Date(+now + 15 * 60e3)), useDefaultReminders: false, notificationLevel: "NONE" });
+    APPERR.last = Date.now();
+  } catch { APPERR.q.unshift(...send); }
+  finally { APPERR.busy = false; }
+}
+window.addEventListener("error", e => appError("script error", `${e.message} @ ${(e.filename || "").split("/").pop()}:${e.lineno}`));
+window.addEventListener("unhandledrejection", e => appError("unhandled error", e.reason?.message || e.reason));
+// stale data: the page is open and visible but the calendar hasn't loaded for 20+ minutes (it reloads every 5)
+setInterval(() => { if (document.visibilityState === "visible" && typeof lastLoad !== "undefined" && lastLoad && Date.now() - lastLoad > 20 * 60e3) appError("stale data", `last calendar load ${Math.round((Date.now() - lastLoad) / 60e3)} min ago${typeof loadFail !== "undefined" && loadFail ? " – " + (loadFail.message || loadFail) : ""}`); }, 5 * 60e3);
+AFTER_RELOAD.push(async () => { appErrFlush(); });
