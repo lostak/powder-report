@@ -309,7 +309,10 @@ const golfLocal = () => { try { return JSON.parse(localStorage.getItem(GOLF_KEY)
 let CLOUD = null;
 const cloud = (async () => { try { const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]); if (!db || !user) return null;
   const id = await Promise.race([user.id(), new Promise(r => setTimeout(() => r(null), 8000))]); if (!id) return null; CLOUD = db.collection("data/users/" + id); return CLOUD; } catch { return null; } })();
-async function cloudGet(k) { try { const c = await Promise.race([cloud, new Promise(r => setTimeout(() => r(null), 8000))]); if (!c) return null; const snap = await Promise.race([c.doc(k).get(), new Promise(r => setTimeout(() => r(null), 8000))]); const v = snap?.data ? snap.data() : snap; return v || null; } catch { return null; } }
+async function cloudGet(k) { try { const c = await Promise.race([cloud, new Promise(r => setTimeout(() => r(null), 8000))]); if (!c) return null; const snap = await Promise.race([c.doc(k).get(), new Promise(r => setTimeout(() => r(null), 8000))]); const v = snap?.data ? snap.data() : snap; return cloudCopy(v); } catch { return null; } }
+// The claude.ai db hands back FROZEN snapshots: pushing a 5th bet slip onto the saved list threw "Cannot add property 4,
+// object is not extensible" on his phone (Nov 15). Every caller edits what it loads, so always return a plain copy.
+function cloudCopy(v) { if (v === null || v === undefined) return null; try { return JSON.parse(JSON.stringify(v)); } catch { return null; } }
 let cloudQ = Promise.resolve();
 function cloudSet(k, v) { cloudQ = cloudQ.then(async () => { try { const c = await cloud; if (c) await c.doc(k).set(v); } catch {} }); }
 const golfKeep = (g) => { const v = { id: g?.id || null, description: g?.description || "", at: Date.now() }; try { localStorage.setItem(GOLF_KEY, JSON.stringify(v)); } catch {} cloudSet("golf", v); };
@@ -563,12 +566,16 @@ async function appErrFlush() {
   APPERR.busy = true; const send = APPERR.q.splice(0);
   try {
     const now = new Date(), r = await mcp.callTool(CAL, "list_events", { fullText: "APP-ERRORS", startTime: localISO(new Date(+now - 400 * 864e5)), endTime: localISO(new Date(+now + 2 * 864e5)), pageSize: 10 });
-    const ev = (r?.events || []).find(e => (e.summary || "") === "Personal: app errors");
+    let ev = (r?.events || []).find(e => (e.summary || "") === "Personal: app errors");
+    // calendar search can lag a just-created event by minutes: use the one this page made instead of making another
+    // (two identical "Personal: app errors" events were created 27 s apart on Nov 15)
+    if (!ev && APPERR.id) ev = await mcp.callTool(CAL, "get_event", { eventId: APPERR.id }).then(v => v?.event || v).catch(() => null);
+    if (!ev && APPERR.created && Date.now() - APPERR.created < 15 * 60e3) throw new Error("app errors event not searchable yet");
     if (ev) {
       const cur = String((await mcp.callTool(CAL, "get_event", { eventId: ev.id }))?.description || ev.description || "").split("\n").filter(l => l.trim() && l.trim() !== "APP-ERRORS");
       const all = [...cur.slice(0, 1), ...[...cur.slice(1), ...send].slice(-40)];
       await mcp.callTool(CAL, "update_event", { eventId: ev.id, description: all.join("\n") + "\nAPP-ERRORS" });
-    } else await mcp.callTool(CAL, "create_event", { summary: "Personal: app errors", description: ["Problems seen on Bradley's own devices (newest last). The daily app check reads this.", ...send, "APP-ERRORS"].join("\n"), startTime: localISO(now), endTime: localISO(new Date(+now + 15 * 60e3)), useDefaultReminders: false, notificationLevel: "NONE" });
+    } else { APPERR.created = Date.now(); const made = await payload(mcp.callTool(CAL, "create_event", { summary: "Personal: app errors", description: ["Problems seen on Bradley's own devices (newest last). The daily app check reads this.", ...send, "APP-ERRORS"].join("\n"), startTime: localISO(now), endTime: localISO(new Date(+now + 15 * 60e3)), useDefaultReminders: false, notificationLevel: "NONE" })); APPERR.id = (made?.event || made)?.id || null; }
     APPERR.last = Date.now();
   } catch { APPERR.q.unshift(...send); }
   finally { APPERR.busy = false; }
