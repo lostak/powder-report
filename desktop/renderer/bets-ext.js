@@ -245,14 +245,8 @@ async function bhUpload(redraw) {
         }
       }
     }
-    // 3) one confirmation for everything
-    const note = [failedUp ? `${failedUp} of ${n} picture${failedUp === 1 ? "" : "s"} didn't upload.` : "",
-      unread.length ? `Couldn't read slip${unread.length === 1 ? "" : "s"} ${unread.join(", ")}${why ? " (" + why + ")" : ""} – type those bets in.` : ""].filter(Boolean).join(" ");
-    const v = await confirmSheet({ heading: many ? `Bets on these ${n} slips` : "Bets on this slip",
-      body: "One bet per line: date | bet | odds | $stake to win $x | book | status. Fix anything Claude misread, or clear it to keep only the pictures." + (note ? " " + note : ""),
-      fields: [{ label: "Bets", type: "textarea", value: bets.map(bhLine).join("\n") }], ok: "Save" });
-    const text = v === null || v === undefined || v === false ? "" : Array.isArray(v) ? v[0] : (typeof v === "object" ? Object.values(v)[0] : v);
-    const parsed = String(text || "").split("\n").map(bhUnline).filter(Boolean);
+    // 3) save straight away (no confirmation step – Bradley never edits it); a bet misread can be fixed in Bet history
+    const parsed = bets.map(bhLine).map(bhUnline).filter(Boolean);
     // each saved bet goes with the picture Claude found it on (for the thumbnails); anything typed in goes with the first
     const key = (b) => String(b.bet || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     const imageOf = (p) => (bets.find(b => key(b) === key(p))?.image) || 1;
@@ -260,7 +254,8 @@ async function bhUpload(redraw) {
     bhLocal("slips", BH.slips); cloudSet("betslips", { items: BH.slips, at: Date.now() });
     if (parsed.length) await bhWriteLog(parsed).catch(e => toast("Saved the slips, but couldn't update the picks log: " + (e?.message || e)));
     const saved = ups.length - failedUp;
-    toast(`${saved} slip${saved === 1 ? "" : "s"} saved${parsed.length ? `, ${parsed.length} bet${parsed.length === 1 ? "" : "s"} added` : ""}.`);
+    toast(`${saved} slip${saved === 1 ? "" : "s"} saved${parsed.length ? `, ${parsed.length} bet${parsed.length === 1 ? "" : "s"} added` : ""}.`
+      + (failedUp ? ` ${failedUp} didn't upload.` : "") + (unread.length ? ` Couldn't read slip${unread.length === 1 ? "" : "s"} ${unread.join(", ")} – try again.` : ""));
     redraw?.(); try { TABS.bets(); } catch {}
   };
   inp.click();
