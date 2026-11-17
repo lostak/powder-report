@@ -24,5 +24,11 @@ const cal = new Calendar({ get: () => ({ ...cfg }), set: (o) => { cfg = o; } }, 
   await cal.update_event({ eventId: "e1", summary: "✅ Personal: x", useDefaultReminders: false });
   const u = calls.find(c => c[0] === "PATCH"); assert.ok(u[1].includes("/events/e1")); assert.equal(JSON.parse(u[2]).summary, "✅ Personal: x");
   assert.equal(calls.filter(c => c[1].includes("token")).length, 1, "token cached");
+  // an expired sign-in (invalid_grant) must sign out, so the app shows the sign-in screen (Nov 17: stuck "signed in")
+  let c2 = { clientId: "id", clientSecret: "sec", refreshToken: "dead" };
+  const dead = new Calendar({ get: () => ({ ...c2 }), set: (o) => { c2 = o; } }, () => {},
+    async () => ({ ok: false, status: 400, json: async () => ({ error: "invalid_grant", error_description: "Token has been expired or revoked." }) }));
+  await assert.rejects(dead.list_events({}), (e) => e.code === "needs_reauth");
+  assert.equal(dead.signedIn, false, "expired sign-in forgotten");
   console.log("calendar.js: all tests passed");
 })().catch(e => { console.error(e); process.exit(1); });

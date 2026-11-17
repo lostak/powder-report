@@ -145,10 +145,12 @@ async function checkAlerts(first = false) {
 
 // ---------- IPC from the page ----------
 const wrap = (fn) => async (_e, ...a) => { try { return { ok: await fn(...a) }; } catch (err) { return { error: { code: err.code || "upstream_error", message: err.message } }; } };
-ipcMain.handle("cal", wrap((tool, input) => {
+ipcMain.handle("cal", wrap(async (tool, input) => {
   if (!["list_events", "create_event", "update_event"].includes(tool)) throw Object.assign(new Error("not allowed"), { code: "not_in_manifest" });
-  return cal[tool](input || {});
+  try { return await cal[tool](input || {}); }
+  catch (e) { if (e.code === "needs_reauth" && !cal.signedIn && !reauthShown) { reauthShown = true; setTimeout(() => { loadPage(); refreshTrayMenu(); reauthShown = false; }, 50); } throw e; }
 }));
+let reauthShown = false;
 ipcMain.handle("ski", wrap(async () => {
   const base = (store.get().skiUrl || "").replace(/\/+$/, "").replace(/\/mcp$/, "");
   if (!base) throw Object.assign(new Error("Ski Outlook not set up"), { code: "server_not_connected" });

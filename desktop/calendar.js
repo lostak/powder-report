@@ -63,7 +63,11 @@ class Calendar {
     const r = await this.fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, ...params }) });
     const j = await r.json();
-    if (!r.ok) { const e = new Error(j.error_description || j.error || "token error"); e.code = j.error === "invalid_grant" ? "needs_reauth" : "upstream_error"; throw e; }
+    if (!r.ok) {
+      // an expired/revoked sign-in: forget it so the app goes back to the sign-in screen instead of looking signed in
+      if (j.error === "invalid_grant" && params.grant_type === "refresh_token") this.signOut();
+      const e = new Error(j.error === "invalid_grant" ? "Google sign-in expired – sign in again" : (j.error_description || j.error || "token error")); e.code = j.error === "invalid_grant" ? "needs_reauth" : "upstream_error"; throw e;
+    }
     this.access = j.access_token; this.exp = Date.now() + (j.expires_in - 60) * 1000;
     return j;
   }

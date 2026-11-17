@@ -29,6 +29,7 @@
       <li>In <a href="https://console.cloud.google.com/apis/credentials">Google Cloud → Credentials</a> (the same project as the Android app, or a new one with the Google Calendar API enabled and you added as a test user)…</li>
       <li>Create credentials → OAuth client ID → <b>Desktop app</b>.</li>
       <li>Paste the client ID and secret below.</li>
+      <li>So sign-in doesn't expire every 7 days: <a href="https://console.cloud.google.com/auth/audience">Google Auth Platform → Audience</a> → <b>Publish app</b> (no review needed for just you).</li>
     </ol>
     <label>Client ID</label><input id="cid" placeholder="1234-abc.apps.googleusercontent.com">
     <label>Client secret</label><input id="sec" type="password" placeholder="(saved – leave blank to keep)">
@@ -40,6 +41,7 @@
   </div>
 
   <button id="go">Save and sign in with Google</button>
+  <button class="g" id="re">Sign in to Google again</button>
   <button class="g" id="back">Back to My Life</button>
   <div class="msg" id="msg"></div>
 </div>
@@ -56,6 +58,14 @@
       try {
         await window.lifeDesktop.saveSetup({ clientId: $("#cid").value, clientSecret: $("#sec").value, skiUrl: $("#ski").value });
         if (s.signedIn) { msg("Saved.", "ok"); location.href = "index.html"; return; }
+        msg("Finish signing in in your browser…");
+        await window.lifeDesktop.signIn();
+      } catch (e) { msg(e.message || String(e), "err"); }
+    };
+    $("#re").style.display = s.signedIn ? "" : "none";
+    $("#re").onclick = async () => {
+      try {
+        await window.lifeDesktop.saveSetup({ clientId: $("#cid").value, clientSecret: $("#sec").value, skiUrl: $("#ski").value });
         msg("Finish signing in in your browser…");
         await window.lifeDesktop.signIn();
       } catch (e) { msg(e.message || String(e), "err"); }
