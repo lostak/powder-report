@@ -13,7 +13,7 @@ function setupUpdates() {
   let autoUpdater; try { ({ autoUpdater } = require("electron-updater")); } catch { return; }
   autoUpdater.autoDownload = true; autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.on("update-downloaded", (info) => {
-    updateReady = info.version; refreshTrayMenu();
+    updateReady = info.version; refreshTrayMenu(); setJumpList();
     // if it was started hidden (Start with Windows), restart it ourselves since nobody is looking
     const n = new Notification({ title: "My Life updated", body: `Version ${info.version} is ready. Click to restart now, or it installs next time My Life starts.`, icon: path.join(__dirname, "build", "icon.png") });
     n.on("click", () => { quitting = true; autoUpdater.quitAndInstall(true, true); }); n.show();
@@ -84,6 +84,8 @@ function setJumpList() {
   const icon = app.isPackaged ? exe : path.join(__dirname, "build", "icon.ico");
   const task = (title, what, description) => ({ program: exe, arguments: [...base, `--open=${what}`].map(a => `"${a}"`).join(" "), iconPath: icon, iconIndex: 0, title, description });
   app.setUserTasks([
+    // also here, not only in the tray: the taskbar right-click is where Bradley looks (Nov 17)
+    ...(updateReady ? [task(`Restart to update (v${updateReady})`, "update", "Install the new version and reopen My Life")] : []),
     task("Start ski workout", "ski", "Open tonight's workout with the timer"),
     task("Start pool session", "pool", "Open today's pool focus and counters"),
     task("Tonight's betting lesson", "bet", "Open tonight's lesson"),
@@ -94,6 +96,10 @@ let pendingOpen = null;
 const openArg = (argv) => (argv.find(a => a.startsWith("--open=")) || "").slice(7) || null;
 function openScreen(what) {
   if (!what) return;
+  if (what === "update") {
+    if (updateReady) { quitting = true; require("electron-updater").autoUpdater.quitAndInstall(true, true); } else show();
+    return;
+  }
   show();
   if (!win.webContents.isLoading()) win.webContents.send("open", what); else pendingOpen = what;
 }
@@ -172,7 +178,7 @@ app.on("second-instance", (_e, argv) => { const w = openArg(argv); w ? openScree
 app.whenReady().then(() => {
   createWindow();
   setJumpList();
-  pendingOpen = openArg(process.argv);
+  pendingOpen = openArg(process.argv); if (pendingOpen === "update") pendingOpen = null;   // a leftover jump-list entry after updating
   if (process.argv.includes("--hidden") && !pendingOpen) win.hide();
   buildTray();
   checkAlerts(true);
