@@ -1193,6 +1193,8 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   Object.keys(TABS).forEach(k => $("#tab-" + k).classList.toggle("hide", k !== tab));
   renderSugs(); location.hash = tab; window.scrollTo(0, 0);
 });
+// a tab tap always leaves a full page (bet history, a session…), including the Golf tab life-ext.js adds later
+document.querySelector("nav").addEventListener("click", (e) => { if (e.target.closest("button[data-tab]")) closeFull(); }, true);
 
 // ============ Ask Claude (your Claude plan; read-only calendar tools) ============
 const SUGS = {
