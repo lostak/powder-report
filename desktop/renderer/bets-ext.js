@@ -300,11 +300,11 @@ function bhLogCard(log) {
 // PLACED CHECKBOXES: tick the picks you placed; if your odds (or, for spreads and totals, your line) were different,
 // edit them before saving. The log line gets "placed: yes (your line -4, your odds -110)"; the picks record keeps the
 // original line and price, and the placed bankroll is graded at yours (grade.js / bankroll.js in game-price-watcher).
-const bhAttrs = (r) => `data-pl-date="${esc(r.date)}" data-pl-bet="${esc(r.bet)}" data-pl-parlay="${r.parlay ? 1 : ""}" data-pl-price="${esc(r.price)}" data-pl-line="${esc(r.line || "")}" data-pl-yodds="${esc(r.yOdds || "")}" data-pl-yline="${esc(r.yLine || "")}"`;
+const bhAttrs = (r) => `data-pl-date="${esc(r.date)}" data-pl-bet="${esc(r.bet)}" data-pl-parlay="${r.parlay ? 1 : ""}" data-pl-price="${esc(r.price)}" data-pl-line="${esc(r.line || "")}" data-pl-yodds="${esc(r.yOdds || "")}" data-pl-yline="${esc(r.yLine || "")}" data-pl-graded="${r.status !== "pending" ? 1 : ""}"`;
 function bhPlaceBox(r) {
   if (r.placed === "slip") return `<div class="bh-pbox"><label><input type="checkbox" checked disabled> Placed</label><span class="bh-mine">from your slip</span></div>`;
   const on = r.placed === "yes", terms = [r.yOdds ? r.yOdds : "", r.yLine ? "line " + r.yLine : ""].filter(Boolean).join(", ");
-  return `<div class="bh-pbox" ${bhAttrs(r)}><label><input type="checkbox" data-pl-box ${on ? "checked" : ""}> Placed</label>${on ? `<span class="bh-mine">${terms ? "at " + esc(terms) : "at " + esc(r.price)}</span><button class="g" data-pl-edit>Edit odds${r.line ? "/line" : ""}</button>` : ""}</div>`;
+  return `<div class="bh-pbox" ${bhAttrs(r)}><label><input type="checkbox" data-pl-box ${on ? "checked" : ""}> Placed</label><label class="bh-no"><input type="checkbox" data-pl-no ${r.placed === "no" ? "checked" : ""}> Did not place</label>${on ? `<span class="bh-mine">${terms ? "at " + esc(terms) : "at " + esc(r.price)}</span><button class="g" data-pl-edit>Edit odds${r.line ? "/line" : ""}</button>` : ""}</div>`;
 }
 function bhEditor(box, checking) {
   box.parentElement.querySelector(".bh-ed")?.remove();
@@ -323,8 +323,8 @@ function bhPlacedLine(l, on, odds, line) {
   l = l.replace(/,\s*yours:\s*(?:pending|(?:W|L|P|Push)\b\s*[+-]?\$?[\d.,]*)/i, "").replace(/(result:[^|]*?\d+(?:\.\d+)?u),\s*[+-]\$[\d.,]+/i, "$1").replace(/\s*\(not placed, no \$\)/i, "").replace(/\s*\(see slip\)/i, "");
   const graded = ((l.match(/result:\s*(W|L|P|Push)\b/i) || [])[1] || "").toUpperCase().slice(0, 1), st = l.match(/(\d+(?:\.\d+)?)u \(\$(\d+(?:\.\d+)?)/), stake = st ? +st[2] : null;
   const addMoney = (m) => l.replace(/(result:\s*(?:W|L|P|Push)\b[^|]*?[+-]?\d+(?:\.\d+)?u)/i, (x) => x + m);
-  if (!on) {
-    l = l.replace(/placed:\s*(not yet|yes|slip|no)(\s*\([^)]*\))?/i, graded ? "placed: no" : "placed: not yet");
+  if (!on || on === "no") {   // false = untick Placed; "no" = ticked "Did not place"
+    l = l.replace(/placed:\s*(not yet|yes|slip|no)(\s*\([^)]*\))?/i, graded || on === "no" ? "placed: no" : "placed: not yet");
     return graded ? addMoney(" (not placed, no $)") : l;
   }
   let yl = null;
@@ -366,6 +366,15 @@ document.addEventListener("click", async (e) => {
     if (t.checked) { t.checked = false; bhEditor(box, true); return; }          // tick → confirm your odds/line first
     t.disabled = true;
     try { await bhSetPlaced(box.dataset, false); await bhAfter("Unchecked – no longer counts as placed."); } catch (x) { t.disabled = false; t.checked = true; toast("Couldn't save: " + (x?.message || x)); }
+    return;
+  }
+  if (t.matches?.("[data-pl-no]")) {
+    e.stopPropagation(); const box = t.closest(".bh-pbox"), on = t.checked;
+    box.parentElement.querySelector(".bh-ed")?.remove();
+    if (!on && box.dataset.plGraded) { t.checked = true; toast("Settled picks count as not placed unless you tick Placed."); return; }
+    t.disabled = true;
+    try { await bhSetPlaced(box.dataset, on ? "no" : false); await bhAfter(on ? "Marked not placed." : "Cleared – not placed yet."); }
+    catch (x) { t.disabled = false; t.checked = !on; toast("Couldn't save: " + (x?.message || x)); }
     return;
   }
   if (t.closest?.("[data-pl-edit]")) { e.preventDefault(); e.stopPropagation(); bhEditor(t.closest(".bh-pbox"), false); return; }

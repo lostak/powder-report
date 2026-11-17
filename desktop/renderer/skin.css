@@ -138,6 +138,8 @@ input, textarea, select { border-radius: var(--radius); }
 .bh-chips button { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--mute); }
 .bh-chips button.on { background: var(--btn); color: var(--btn-ink); box-shadow: none; }
 .bh-pbox input[type=checkbox] { accent-color: var(--good); }
+.bh-pbox label.bh-no { margin-left: 16px; }
+.bh-pbox label.bh-no input[type=checkbox] { accent-color: var(--bad, #c8102e); }
 
 /* ---- wide windows (desktop app): the sidebar is the trailhead sign ---- */
 @media (min-width: 1000px) {
