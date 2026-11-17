@@ -1252,6 +1252,7 @@ function calErr(e) {
 // says when the data was loaded, and a failed refresh shows a warning instead of silently leaving old data up.
 let ARCHIVES = [];
 let loading = false, lastLoad = 0, loadFail = null, again = false;
+const LOAD_TIMEOUT = 120e3;
 const AFTER_RELOAD = [];                 // other views (bet history, …) re-read their data here after each load
 const busyTyping = () => { const a = document.activeElement; return !!a && (a.matches?.("input,textarea,select") || a.isContentEditable); };
 function freshLine() {
@@ -1265,7 +1266,9 @@ async function reload(refresh = true) {
   if (!mcp) return; if (loading) { again = true; return; }   // a save during a background refresh still gets a fresh load after it
   loading = true; $("#refresh").disabled = true;
   try {
-    await loadAll(refresh); lastLoad = Date.now(); loadFail = null; $("#setup").classList.add("hide"); renderAll();
+    // a load that never settles (phone slept mid-request) used to leave loading = true forever, so no reload ever ran again
+    await Promise.race([loadAll(refresh), new Promise((_, no) => setTimeout(() => no(new Error("calendar load timed out after 2 min")), LOAD_TIMEOUT))]);
+    lastLoad = Date.now(); loadFail = null; $("#setup").classList.add("hide"); renderAll();
     for (const f of AFTER_RELOAD) { try { await f(); } catch {} }
   } catch (e) { loadFail = e; if (!lastLoad) setup(calErr(e)); if (navigator.onLine !== false && typeof appError === "function") appError("calendar load failed", e?.message || e); }
   finally { loading = false; $("#refresh").disabled = false; freshLine(); if (again) { again = false; reload(true); } }

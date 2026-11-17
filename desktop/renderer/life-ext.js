@@ -565,14 +565,14 @@ async function appErrFlush() {
   if (APPERR.busy || !APPERR.q.length || Date.now() - APPERR.last < 5 * 60e3 || typeof mcp === "undefined" || !mcp) return;
   APPERR.busy = true; const send = APPERR.q.splice(0);
   try {
-    const now = new Date(), r = await mcp.callTool(CAL, "list_events", { fullText: "APP-ERRORS", startTime: localISO(new Date(+now - 400 * 864e5)), endTime: localISO(new Date(+now + 2 * 864e5)), pageSize: 10 });
+    const now = new Date(), r = await payload(mcp.callTool(CAL, "list_events", { fullText: "APP-ERRORS", startTime: localISO(new Date(+now - 400 * 864e5)), endTime: localISO(new Date(+now + 2 * 864e5)), pageSize: 10 }));   // payload(): the connector wraps results (without it r.events was always empty, so every report made a new event – Nov 15, Nov 16)
     let ev = (r?.events || []).find(e => (e.summary || "") === "Personal: app errors");
     // calendar search can lag a just-created event by minutes: use the one this page made instead of making another
     // (two identical "Personal: app errors" events were created 27 s apart on Nov 15)
-    if (!ev && APPERR.id) ev = await mcp.callTool(CAL, "get_event", { eventId: APPERR.id }).then(v => v?.event || v).catch(() => null);
+    if (!ev && APPERR.id) ev = await payload(mcp.callTool(CAL, "get_event", { eventId: APPERR.id })).then(v => v?.event || v).catch(() => null);
     if (!ev && APPERR.created && Date.now() - APPERR.created < 15 * 60e3) throw new Error("app errors event not searchable yet");
     if (ev) {
-      const cur = String((await mcp.callTool(CAL, "get_event", { eventId: ev.id }))?.description || ev.description || "").split("\n").filter(l => l.trim() && l.trim() !== "APP-ERRORS");
+      const live = await payload(mcp.callTool(CAL, "get_event", { eventId: ev.id })), cur = String((live?.event || live)?.description || ev.description || "").split("\n").filter(l => l.trim() && l.trim() !== "APP-ERRORS");
       const all = [...cur.slice(0, 1), ...[...cur.slice(1), ...send].slice(-40)];
       await mcp.callTool(CAL, "update_event", { eventId: ev.id, description: all.join("\n") + "\nAPP-ERRORS" });
     } else { APPERR.created = Date.now(); const made = await payload(mcp.callTool(CAL, "create_event", { summary: "Personal: app errors", description: ["Problems seen on Bradley's own devices (newest last). The daily app check reads this.", ...send, "APP-ERRORS"].join("\n"), startTime: localISO(now), endTime: localISO(new Date(+now + 15 * 60e3)), useDefaultReminders: false, notificationLevel: "NONE" })); APPERR.id = (made?.event || made)?.id || null; }
@@ -582,6 +582,11 @@ async function appErrFlush() {
 }
 window.addEventListener("error", e => appError("script error", `${e.message} @ ${(e.filename || "").split("/").pop()}:${e.lineno}`));
 window.addEventListener("unhandledrejection", e => appError("unhandled error", e.reason?.message || e.reason));
-// stale data: the page is open and visible but the calendar hasn't loaded for 20+ minutes (it reloads every 5)
-setInterval(() => { if (document.visibilityState === "visible" && typeof lastLoad !== "undefined" && lastLoad && Date.now() - lastLoad > 20 * 60e3) appError("stale data", `last calendar load ${Math.round((Date.now() - lastLoad) / 60e3)} min ago${typeof loadFail !== "undefined" && loadFail ? " – " + (loadFail.message || loadFail) : ""}`); }, 5 * 60e3);
+// stale data: the page has been ON SCREEN for 10+ minutes and the calendar still hasn't loaded for 20+ minutes (it reloads
+// every 5). Only time on screen counts: a phone waking a tab that slept for hours fires this timer before the wake-up
+// reload finishes, which was reported as "stale" (Nov 16, 9:16 PM: "108 min ago" right after the phone woke).
+APPERR.visibleSince = document.visibilityState === "visible" ? Date.now() : 0;
+document.addEventListener("visibilitychange", () => { APPERR.visibleSince = document.visibilityState === "visible" ? Date.now() : 0; });
+const staleNow = (now, lastLoad, visibleSince) => !!(lastLoad && visibleSince && now - visibleSince >= 10 * 60e3 && now - lastLoad > 20 * 60e3);
+setInterval(() => { if (document.visibilityState === "visible" && typeof lastLoad !== "undefined" && staleNow(Date.now(), lastLoad, APPERR.visibleSince)) appError("stale data", `last calendar load ${Math.round((Date.now() - lastLoad) / 60e3)} min ago${typeof loadFail !== "undefined" && loadFail ? " – " + (loadFail.message || loadFail) : ""}`); }, 5 * 60e3);
 AFTER_RELOAD.push(async () => { appErrFlush(); });
