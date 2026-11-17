@@ -343,13 +343,20 @@ function bhPlacedLine(l, on, odds, line) {
   }
   return l;
 }
+const bhPickIndex = (lines, d) => lines.findIndex(l => { const p = l.split(" | ").map(x => x.trim()); return p[0] === d.plDate && p[1] && p[1].replace(/^PARLAY:\s*/i, "") === d.plBet && /^PARLAY:/i.test(p[1]) === !!d.plParlay; });
+// picks older than 4 days live in the weekly "Personal: picks archive – week of …" events, so look there too
 async function bhSetPlaced(d, on, odds, line) {
   const log = await bhLiveLog(); if (!log) throw new Error("no picks log");
-  const lines = String(log.description || "").split("\n");
-  const i = lines.findIndex(l => { const p = l.split(" | ").map(x => x.trim()); return p[0] === d.plDate && p[1] && p[1].replace(/^PARLAY:\s*/i, "") === d.plBet && /^PARLAY:/i.test(p[1]) === !!d.plParlay; });
-  if (i < 0) throw new Error("couldn't find that pick in the log");
+  let ev = log, lines = String(log.description || "").split("\n"), i = bhPickIndex(lines, d);
+  if (i < 0) for (const a of (typeof ARCHIVES !== "undefined" ? ARCHIVES : [])) {
+    if (bhPickIndex(String(a.description || "").split("\n"), d) < 0) continue;
+    const v = await payload(mcp.callTool(CAL, "get_event", { eventId: a.id }, { cache: { staleTime: 0, gcTime: 0, refresh: true } }));
+    const e = v?.event || v; if (!e || typeof e.description !== "string") throw new Error("couldn't re-read the picks archive");
+    a.description = e.description; lines = e.description.split("\n"); i = bhPickIndex(lines, d); ev = a; if (i >= 0) break;
+  }
+  if (i < 0) throw new Error("couldn't find that pick in the log or its archives");
   lines[i] = bhPlacedLine(lines[i], on, odds, line); const description = lines.join("\n");
-  await updateEvent(log.id, { description }); log.description = description;
+  await updateEvent(ev.id, { description }); ev.description = description;
 }
 const bhAfter = async (msg) => { toast(msg); await bhLoad().catch(() => {}); BH.redraw?.(); try { TABS.bets(); } catch {} };
 document.addEventListener("click", async (e) => {
