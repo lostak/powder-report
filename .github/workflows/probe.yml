@@ -6,11 +6,9 @@ jobs:
     steps:
       - run: |
           node -e '
-          (async () => { for (const s of ["colorado/winter-park-resort","colorado/arapahoe-basin-ski-area"]) {
-            const h = await (await fetch("https://www.onthesnow.com/"+s+"/skireport",{headers:{"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"}})).text();
-            console.log("==", s, h.length);
-            const m = h.match(/<meta name="description"[^>]*>/); console.log("META", m && m[0]);
-            for (const re of [/"base[A-Za-z]*"\s*:\s*[^,}]{0,40}/g, /"summit[A-Za-z]*"\s*:\s*[^,}]{0,40}/g, /"depth[A-Za-z]*"\s*:\s*[^,}]{0,60}/gi]) console.log(re.source, [...h.matchAll(re)].slice(0,8).map(x=>x[0]));
-            const t = h.replace(/<script[\s\S]*?<\/script>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
-            const i = t.search(/Base/); console.log("TEXT", t.slice(Math.max(0,i-200), i+400));
-          } })();'
+          const UA={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36","Accept":"text/html","Accept-Language":"en-US"};
+          (async () => { for (const u of ["https://www.skiresort.info/ski-resort/winter-park-resort/snow-report/","https://www.skiresort.info/ski-resort/arapahoe-basin/snow-report/","https://www.snow-forecast.com/resorts/Winter-Park/snow-report","https://www.snow-forecast.com/resorts/Arapahoe-Basin/snow-report","https://www.skiresort.info/ski-resort/copper-mountain/snow-report/"]) {
+            try { const r = await fetch(u,{headers:UA}); const h = await r.text(); const t = h.replace(/<script[\s\S]*?<\/script>/g," ").replace(/<style[\s\S]*?<\/style>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
+              console.log("==", r.status, u, h.length);
+              for (const re of [/[^.]{0,80}(cm|in)\s*(Base|Mountain|Valley)[^.]{0,80}/g, /(Upper|Lower|Mid) snow depth:[^A-Z]{0,30}/g, /Updated on:?\s*[^A-Z]{0,30}/g, /(Top|Bottom) Snow Depth[^.]{0,60}/gi]) console.log("  ", [...t.matchAll(re)].slice(0,4).map(x=>x[0].trim()));
+            } catch (e) { console.log("ERR", u, e.message); } } })();'
