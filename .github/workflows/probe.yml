@@ -1,0 +1,16 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          node -e '
+          (async () => { for (const s of ["colorado/winter-park-resort","colorado/arapahoe-basin-ski-area"]) {
+            const h = await (await fetch("https://www.onthesnow.com/"+s+"/skireport",{headers:{"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"}})).text();
+            console.log("==", s, h.length);
+            const m = h.match(/<meta name="description"[^>]*>/); console.log("META", m && m[0]);
+            for (const re of [/"base[A-Za-z]*"\s*:\s*[^,}]{0,40}/g, /"summit[A-Za-z]*"\s*:\s*[^,}]{0,40}/g, /"depth[A-Za-z]*"\s*:\s*[^,}]{0,60}/gi]) console.log(re.source, [...h.matchAll(re)].slice(0,8).map(x=>x[0]));
+            const t = h.replace(/<script[\s\S]*?<\/script>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
+            const i = t.search(/Base/); console.log("TEXT", t.slice(Math.max(0,i-200), i+400));
+          } })();'
