@@ -10,5 +10,5 @@ jobs:
           (async () => { for (const u of ["https://www.skiresort.info/ski-resort/winter-park-resort/snow-report/","https://www.skiresort.info/ski-resort/arapahoe-basin/snow-report/","https://www.snow-forecast.com/resorts/Winter-Park/snow-report","https://www.snow-forecast.com/resorts/Arapahoe-Basin/snow-report","https://www.skiresort.info/ski-resort/copper-mountain/snow-report/"]) {
             try { const r = await fetch(u,{headers:UA}); const h = await r.text(); const t = h.replace(/<script[\s\S]*?<\/script>/g," ").replace(/<style[\s\S]*?<\/style>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
               console.log("==", r.status, u, h.length);
-              for (const re of [/[^.]{0,80}(cm|in)\s*(Base|Mountain|Valley)[^.]{0,80}/g, /(Upper|Lower|Mid) snow depth:[^A-Z]{0,30}/g, /Updated on:?\s*[^A-Z]{0,30}/g, /(Top|Bottom) Snow Depth[^.]{0,60}/gi]) console.log("  ", [...t.matchAll(re)].slice(0,4).map(x=>x[0].trim()));
+              for (const re of [/[^.]{0,80}(cm|in)\s*(Base|Mountain|Valley)[^.]{0,80}/g, /(Upper|Lower|Mid) snow depth:[^A-Z]{0,30}/g, /Updated on:?\s*[^A-Z]{0,30}/g, /(Top|Bottom) Snow Depth[^.]{0,60}/gi]) console.log("  M", JSON.stringify([...t.matchAll(re)].slice(0,4).map(x=>x[0].trim())));
             } catch (e) { console.log("ERR", u, e.message); } } })();'
