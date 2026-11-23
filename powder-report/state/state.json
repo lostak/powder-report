@@ -858,28 +858,39 @@
  },
  "lastReport": "2026-11-22",
  "base": {
-  "at": 1795401776840,
+  "v": 2,
+  "at": 1795402700384,
   "by": {
    "Winter Park": {
-    "url": "https://www.onthesnow.com/colorado/winter-park-resort/skireport"
+    "base": 18,
+    "summit": 18,
+    "asOf": "22 Nov 2026",
+    "url": "https://www.skiresort.info/ski-resort/winter-park-resort/snow-report/"
    },
    "Copper": {
-    "url": "https://www.onthesnow.com/colorado/copper-mountain-resort/skireport"
+    "base": 2,
+    "summit": 18,
+    "asOf": "22 Nov 2026",
+    "url": "https://www.skiresort.info/ski-resort/copper-mountain/snow-report/"
    },
    "A-Basin": {
-    "url": "https://www.onthesnow.com/colorado/arapahoe-basin-ski-area/skireport"
+    "base": 2,
+    "summit": 18,
+    "asOf": "22 Nov 2026",
+    "url": "https://www.skiresort.info/ski-resort/arapahoe-basin/snow-report/"
    },
    "Eldora": {
-    "closed": true,
-    "url": "https://www.onthesnow.com/colorado/eldora-mountain-resort/skireport"
+    "url": "https://www.skiresort.info/ski-resort/eldora-mountain-resort/snow-report/"
    },
    "Steamboat": {
+    "asOf": "22 Nov 2026",
     "closed": true,
-    "url": "https://www.onthesnow.com/colorado/steamboat/skireport"
+    "url": "https://www.skiresort.info/ski-resort/steamboat/snow-report/"
    },
    "Aspen Snowmass": {
+    "asOf": "22 Nov 2026",
     "closed": true,
-    "url": "https://www.onthesnow.com/colorado/aspen-snowmass/skireport"
+    "url": "https://www.skiresort.info/ski-resort/snowmass/snow-report/"
    }
   }
  }
