@@ -35,5 +35,6 @@ async function bases(mountains, state, log = () => {}) {
 }
 // a report older than 3 days isn't "current" (closed resorts keep their last number)
 const current = b => { if (!b || b.base == null) return false; if (!b.asOf) return true; return Date.now() - Date.parse(b.asOf + ' 12:00 UTC') < 3 * 864e5; };
-const label = b => current(b) ? `base ${b.base}"${b.summit != null && b.summit !== b.base ? ` / summit ${b.summit}"` : ''}` : '';
+// a 0" base (snowmaking only so far) reads as "summit 18"" rather than "base 0""
+const label = b => !current(b) ? '' : b.base > 0 ? `base ${b.base}"${b.summit != null && b.summit !== b.base ? ` / summit ${b.summit}"` : ''}` : b.summit ? `summit ${b.summit}"` : '';
 module.exports = { bases, parse, label, current };
