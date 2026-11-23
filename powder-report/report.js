@@ -15,7 +15,7 @@ const dbg = (...a) => { if (DEBUG) console.log('  [debug]', ...a); };
 const state = fs.existsSync(STATE) ? JSON.parse(fs.readFileSync(STATE, 'utf8')) : { grid: {}, alerts: {}, powderDays: {}, snotel: null };
 
 const gcal = require('./gcal');
-const Base = require('./base');   // resort-reported base depth (OnTheSnow), cached 3 h   // Bradley's calendar: PASSES/MOUNTAINS from "Personal: life settings"; alert events for the app and morning brief
+const Base = require('./base');   // resort-reported base depth (skiresort.info), cached 3 h   // Bradley's calendar: PASSES/MOUNTAINS from "Personal: life settings"; alert events for the app and morning brief
 let mountains = cfg.mountains.filter(m => (cfg.passes || []).includes(m.pass) || (cfg.extra || []).includes(m.name));
 const calEvent = async (summary, description) => { if (DRY || !gcal.ready) return; try { await gcal.insert({ summary, description, when: gcal.nextQuarter() }); } catch (e) { log('Calendar event failed: ' + e.message.slice(0, 120)); } };
 const localParts = (d = new Date()) => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short' }).formatToParts(d).map(x => [x.type, x.value])); return { date: `${p.year}-${p.month}-${p.day}`, hour: +p.hour + (+p.minute) / 60, weekday: p.weekday }; };
@@ -148,7 +148,7 @@ async function slack(text) {
   for (const k of Object.keys(state.powderDays)) if (k < addDays(now.date, -2)) delete state.powderDays[k];
   if (pow.length && !state.powderDays[now.date] && !inQuiet(Q.powderDayFrom, Q.powderDayTo)) {
     const [top, o] = pow[0];
-    const rows = Object.entries(obs).filter(([, x]) => x.newSnow >= 3).sort((a, b) => b[1].newSnow - a[1].newSnow).map(([n, x]) => `${n} +${Math.round(x.newSnow)}"${base[n] && base[n].base != null ? ` (base ${base[n].base}")` : ''}`).join(' · ');
+    const rows = Object.entries(obs).filter(([, x]) => x.newSnow >= 3).sort((a, b) => b[1].newSnow - a[1].newSnow).map(([n, x]) => `${n} +${Math.round(x.newSnow)}"${Base.current(base[n]) ? ` (base ${base[n].base}")` : ''}`).join(' · ');
     const link = (mountains.find(m => m.name === top) || {}).snowReport || '';
     await slack(`🚨 *POWDER DAY – ${top} ${Math.round(o.newSnow)}" OVERNIGHT*\n*Snow stake nearest each mountain (SNOTEL, last 24 h):* ${rows}\n${link}\n_Confirm on the resort's snow report, then go._`);
     state.powderDays[now.date] = { top, in: o.newSnow };
@@ -162,9 +162,9 @@ async function slack(text) {
   if (REPORT || dailyDue) {
     if (!DRY) state.lastReport = now.date;
     const days = horizon.slice(0, 7);
-    const rows = mountains.filter(m => fc[m.name]).map(m => `${m.name}: ${days.map(d => `${nice(d).slice(0, 3)} ${rnd(fc[m.name][d] || 0)}`).join(' · ')}${obs[m.name] ? ` | overnight +${rnd(obs[m.name].newSnow)}"` : ''}${Base.label(base[m.name]) ? ` | ${Base.label(base[m.name])}` : base[m.name] && base[m.name].closed ? ' | not open yet' : ''}`);
+    const rows = mountains.filter(m => fc[m.name]).map(m => `${m.name}: ${days.map(d => `${nice(d).slice(0, 3)} ${rnd(fc[m.name][d] || 0)}`).join(' · ')}${obs[m.name] ? ` | overnight +${rnd(obs[m.name].newSnow)}"` : ''}${Base.label(base[m.name]) ? ` | ${Base.label(base[m.name])}` : ""}`);
     const best = mountains.filter(m => fc[m.name]).map(m => ({ n: m.name, w: (fc[m.name][sat] || 0) + (fc[m.name][sun] || 0) })).sort((a, b) => b.w - a.w)[0];
-    await slack(`❄️ *Snow report – ${nice(now.date)}* (inches, NWS forecast per ski day; overnight from the nearest SNOTEL; base = the resort's reported depth)\n${rows.join('\n')}\n*Weekend pick:* ${best ? `${best.n} ${rnd(best.w)}" Sat+Sun` : '–'}${errors.length ? `\n(couldn't read: ${errors.map(e => e.split(':')[0]).join(', ')})` : ''}`);
+    await slack(`❄️ *Snow report – ${nice(now.date)}* (inches, NWS forecast per ski day; overnight from the nearest SNOTEL; base / summit = what the resort reports)\n${rows.join('\n')}\n*Weekend pick:* ${best ? `${best.n} ${rnd(best.w)}" Sat+Sun` : '–'}${errors.length ? `\n(couldn't read: ${errors.map(e => e.split(':')[0]).join(', ')})` : ''}`);
     summary.push('full report posted');
   }
   // 3) errors (once a day at most)

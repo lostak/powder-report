@@ -25,7 +25,7 @@
       "aliases": [
         "winter park"
       ],
-      "onthesnow": "colorado/winter-park-resort"
+      "skiresort": "winter-park-resort"
     },
     {
       "name": "Copper",
@@ -36,7 +36,7 @@
       "aliases": [
         "copper"
       ],
-      "onthesnow": "colorado/copper-mountain-resort"
+      "skiresort": "copper-mountain"
     },
     {
       "name": "A-Basin",
@@ -49,7 +49,7 @@
         "arapahoe",
         "abasin"
       ],
-      "onthesnow": "colorado/arapahoe-basin-ski-area"
+      "skiresort": "arapahoe-basin"
     },
     {
       "name": "Eldora",
@@ -60,7 +60,7 @@
       "aliases": [
         "eldora"
       ],
-      "onthesnow": "colorado/eldora-mountain-resort"
+      "skiresort": "eldora-mountain-resort"
     },
     {
       "name": "Steamboat",
@@ -71,7 +71,7 @@
       "aliases": [
         "steamboat"
       ],
-      "onthesnow": "colorado/steamboat"
+      "skiresort": "steamboat"
     },
     {
       "name": "Aspen Snowmass",
@@ -83,7 +83,7 @@
         "aspen",
         "snowmass"
       ],
-      "onthesnow": "colorado/aspen-snowmass"
+      "skiresort": "snowmass"
     },
     {
       "name": "Vail",
@@ -94,7 +94,7 @@
       "aliases": [
         "vail"
       ],
-      "onthesnow": "colorado/vail"
+      "skiresort": "vail"
     },
     {
       "name": "Beaver Creek",
@@ -105,7 +105,7 @@
       "aliases": [
         "beaver"
       ],
-      "onthesnow": "colorado/beaver-creek"
+      "skiresort": "beaver-creek"
     },
     {
       "name": "Breckenridge",
@@ -116,7 +116,7 @@
       "aliases": [
         "breck"
       ],
-      "onthesnow": "colorado/breckenridge"
+      "skiresort": "breckenridge"
     },
     {
       "name": "Keystone",
@@ -127,7 +127,7 @@
       "aliases": [
         "keystone"
       ],
-      "onthesnow": "colorado/keystone"
+      "skiresort": "keystone"
     },
     {
       "name": "Crested Butte",
@@ -138,7 +138,7 @@
       "aliases": [
         "crested"
       ],
-      "onthesnow": "colorado/crested-butte-mountain-resort"
+      "skiresort": "crested-butte-mountain-resort"
     },
     {
       "name": "Loveland",
@@ -149,7 +149,7 @@
       "aliases": [
         "loveland"
       ],
-      "onthesnow": "colorado/loveland"
+      "skiresort": "loveland"
     },
     {
       "name": "Monarch",
@@ -160,7 +160,7 @@
       "aliases": [
         "monarch"
       ],
-      "onthesnow": "colorado/monarch-mountain"
+      "skiresort": "monarch-mountain"
     },
     {
       "name": "Ski Cooper",
@@ -171,7 +171,7 @@
       "aliases": [
         "cooper"
       ],
-      "onthesnow": "colorado/ski-cooper"
+      "skiresort": "ski-cooper"
     },
     {
       "name": "Wolf Creek",
@@ -182,7 +182,7 @@
       "aliases": [
         "wolf creek"
       ],
-      "onthesnow": "colorado/wolf-creek-ski-area"
+      "skiresort": "wolf-creek"
     },
     {
       "name": "Sunlight",
@@ -193,7 +193,7 @@
       "aliases": [
         "sunlight"
       ],
-      "onthesnow": "colorado/sunlight-mountain-resort"
+      "skiresort": "sunlight-mountain-resort"
     },
     {
       "name": "Echo Mountain",
@@ -204,7 +204,7 @@
       "aliases": [
         "echo"
       ],
-      "onthesnow": "colorado/echo-mountain"
+      "skiresort": "echo-mountain"
     }
   ]
 }

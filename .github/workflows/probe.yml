@@ -3,12 +3,12 @@ on: workflow_dispatch
 jobs:
   p:
     runs-on: ubuntu-latest
+    defaults: { run: { working-directory: powder-report } }
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
       - run: |
           node -e '
-          const UA={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36","Accept":"text/html","Accept-Language":"en-US"};
-          (async () => { for (const u of ["https://www.skiresort.info/ski-resort/winter-park-resort/snow-report/","https://www.skiresort.info/ski-resort/arapahoe-basin/snow-report/","https://www.snow-forecast.com/resorts/Winter-Park/snow-report","https://www.snow-forecast.com/resorts/Arapahoe-Basin/snow-report","https://www.skiresort.info/ski-resort/copper-mountain/snow-report/"]) {
-            try { const r = await fetch(u,{headers:UA}); const h = await r.text(); const t = h.replace(/<script[\s\S]*?<\/script>/g," ").replace(/<style[\s\S]*?<\/style>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
-              console.log("==", r.status, u, h.length);
-              for (const re of [/[^.]{0,80}(cm|in)\s*(Base|Mountain|Valley)[^.]{0,80}/g, /(Upper|Lower|Mid) snow depth:[^A-Z]{0,30}/g, /Updated on:?\s*[^A-Z]{0,30}/g, /(Top|Bottom) Snow Depth[^.]{0,60}/gi]) console.log("  M", JSON.stringify([...t.matchAll(re)].slice(0,4).map(x=>x[0].trim())));
-            } catch (e) { console.log("ERR", u, e.message); } } })();'
+          const B = require("./base"), c = require("./mountains.json"), st = {};
+          B.bases(c.mountains, st, console.log).then(by => { for (const [n, b] of Object.entries(by)) console.log("R", n, JSON.stringify({ ...b, url: undefined }), B.label(b)); });'
