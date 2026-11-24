@@ -19,12 +19,7 @@
   "39.6845,-105.518": "https://api.weather.gov/gridpoints/BOU/44,60"
  },
  "alerts": {},
- "powderDays": {
-  "2026-11-21": {
-   "top": "Aspen Snowmass",
-   "in": 6
-  }
- },
+ "powderDays": {},
  "snotel": {
   "at": 1794001846721,
   "list": [
