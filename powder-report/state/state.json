@@ -854,36 +854,36 @@
  "lastReport": "2026-11-25",
  "base": {
   "v": 2,
-  "at": 1795619904611,
+  "at": 1795633951945,
   "by": {
    "Winter Park": {
     "base": 18,
     "summit": 18,
-    "asOf": "23 Nov 2026",
+    "asOf": "25 Nov 2026",
     "url": "https://www.skiresort.info/ski-resort/winter-park-resort/snow-report/"
    },
    "Copper": {
     "base": 2,
     "summit": 18,
-    "asOf": "23 Nov 2026",
+    "asOf": "25 Nov 2026",
     "url": "https://www.skiresort.info/ski-resort/copper-mountain/snow-report/"
    },
    "A-Basin": {
     "base": 2,
     "summit": 18,
-    "asOf": "23 Nov 2026",
+    "asOf": "25 Nov 2026",
     "url": "https://www.skiresort.info/ski-resort/arapahoe-basin/snow-report/"
    },
    "Eldora": {
     "url": "https://www.skiresort.info/ski-resort/eldora-mountain-resort/snow-report/"
    },
    "Steamboat": {
-    "asOf": "24 Nov 2026",
+    "asOf": "25 Nov 2026",
     "closed": true,
     "url": "https://www.skiresort.info/ski-resort/steamboat/snow-report/"
    },
    "Aspen Snowmass": {
-    "asOf": "24 Nov 2026",
+    "asOf": "25 Nov 2026",
     "closed": true,
     "url": "https://www.skiresort.info/ski-resort/snowmass/snow-report/"
    }
