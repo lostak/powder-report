@@ -64,8 +64,8 @@ function bhParseLog(desc) {
     const dm = (slip ? slipSt : res).match(/([+-])\$(\d+(?:\.\d+)?)/);
     const slipStake = slip ? ((p[3] || "").match(/\$(\d+(?:\.\d+)?)/) || [])[1] : null;
     const sport = (bet.match(/\((CFB|NFL|NHL|NBA|CBB|MLB|TT)\b/i) || [])[1]?.toUpperCase() || (/table tennis|setka|liga pro/i.test(bet) ? "TT" : parlay ? "Parlay" : "Other");
-    const pf = find(/^placed:/i), yLine = (pf.match(/your line ([+-]?\d+(?:\.\d+)?)/i) || [])[1] || null, yOdds = (pf.match(/your odds ([+-]\d+)/i) || [])[1] || null;
-    rows.push({ yLine, yOdds, line: slip || parlay ? null : bhLineOf(bet), date: m[2], slip, parlay, bet: bet.replace(/^PARLAY:\s*/i, ""), price: (p[2] || "").split(" ")[0], priceNote: (p[2] || "").replace(/^\S+\s*/, ""),
+    const pf = find(/^placed:/i), yLine = (pf.match(/your line ([+-]?\d+(?:\.\d+)?)/i) || [])[1] || null, yOdds = (pf.match(/your odds ([+-]\d+)/i) || [])[1] || null, yStake = (pf.match(/your stake \$?(\d+(?:\.\d+)?)/i) || [])[1] || null;
+    rows.push({ yLine, yOdds, yStake, line: slip || parlay ? null : bhLineOf(bet), date: m[2], slip, parlay, bet: bet.replace(/^PARLAY:\s*/i, ""), price: (p[2] || "").split(" ")[0], priceNote: (p[2] || "").replace(/^\S+\s*/, ""),
       book: p[3] || "", conf: (find(/^(Low|Medium|High)/i).match(/^(Low|Medium|High)(-\w+)?/i) || [""])[0],
       stakeU: slip ? null : parseFloat(stake) || null, stake$: slip ? parseFloat(slipStake) || null : parseFloat((stake.match(/\$(\d+(?:\.\d+)?)/) || [])[1]) || null, placed,
       status, units: isNaN(units) ? null : units, dollars: dm && (slip || placed === "yes") ? (dm[1] === "-" ? -1 : 1) * parseFloat(dm[2]) : slip && /^push/i.test(slipSt) ? 0 : null,
@@ -297,14 +297,14 @@ function bhLogCard(log) {
     ${body || '<div class="empty">No picks logged yet.</div>'}
     <div class="acts"><button data-open="bethistory">Full bet history</button></div></div>`;
 }
-// PLACED CHECKBOXES: tick the picks you placed; if your odds (or, for spreads and totals, your line) were different,
-// edit them before saving. The log line gets "placed: yes (your line -4, your odds -110)"; the picks record keeps the
+// PLACED CHECKBOXES: tick the picks you placed; if your odds, bet size (or, for spreads and totals, your line) were different,
+// edit them before saving. The log line gets "placed: yes (your line -4, your odds -110, your stake $5.00)"; the picks record keeps the
 // original line and price, and the placed bankroll is graded at yours (grade.js / bankroll.js in game-price-watcher).
-const bhAttrs = (r) => `data-pl-date="${esc(r.date)}" data-pl-bet="${esc(r.bet)}" data-pl-parlay="${r.parlay ? 1 : ""}" data-pl-price="${esc(r.price)}" data-pl-line="${esc(r.line || "")}" data-pl-yodds="${esc(r.yOdds || "")}" data-pl-yline="${esc(r.yLine || "")}" data-pl-graded="${r.status !== "pending" ? 1 : ""}"`;
+const bhAttrs = (r) => `data-pl-date="${esc(r.date)}" data-pl-bet="${esc(r.bet)}" data-pl-parlay="${r.parlay ? 1 : ""}" data-pl-price="${esc(r.price)}" data-pl-line="${esc(r.line || "")}" data-pl-yodds="${esc(r.yOdds || "")}" data-pl-yline="${esc(r.yLine || "")}" data-pl-stake="${esc(r.stake$ ?? "")}" data-pl-ystake="${esc(r.yStake || "")}" data-pl-graded="${r.status !== "pending" ? 1 : ""}"`;
 function bhPlaceBox(r) {
   if (r.placed === "slip") return `<div class="bh-pbox"><label><input type="checkbox" checked disabled> Placed</label><span class="bh-mine">from your slip</span></div>`;
-  const on = r.placed === "yes", terms = [r.yOdds ? r.yOdds : "", r.yLine ? "line " + r.yLine : ""].filter(Boolean).join(", ");
-  return `<div class="bh-pbox" ${bhAttrs(r)}><label><input type="checkbox" data-pl-box ${on ? "checked" : ""}> Placed</label><label class="bh-no"><input type="checkbox" data-pl-no ${r.placed === "no" ? "checked" : ""}> Did not place</label>${on ? `<span class="bh-mine">${terms ? "at " + esc(terms) : "at " + esc(r.price)}</span><button class="g" data-pl-edit>Edit odds${r.line ? "/line" : ""}</button>` : ""}</div>`;
+  const on = r.placed === "yes", terms = [r.yOdds ? r.yOdds : "", r.yLine ? "line " + r.yLine : "", r.yStake ? "$" + r.yStake : ""].filter(Boolean).join(", ");
+  return `<div class="bh-pbox" ${bhAttrs(r)}><label><input type="checkbox" data-pl-box ${on ? "checked" : ""}> Placed</label><label class="bh-no"><input type="checkbox" data-pl-no ${r.placed === "no" ? "checked" : ""}> Did not place</label>${on ? `<span class="bh-mine">${terms ? "at " + esc(terms) : "at " + esc(r.price)}</span><button class="g" data-pl-edit>Edit odds${r.line ? "/line" : ""}/size</button>` : ""}</div>`;
 }
 function bhEditor(box, checking) {
   box.parentElement.querySelector(".bh-ed")?.remove();
@@ -312,13 +312,14 @@ function bhEditor(box, checking) {
   box.insertAdjacentHTML("afterend", `<div class="bh-ed" data-checking="${checking ? 1 : ""}">
     <label>Your odds<input inputmode="decimal" data-ed-odds value="${esc(d.plYodds || d.plPrice)}"></label>
     ${line ? `<label>Your line<input inputmode="decimal" data-ed-line value="${esc(d.plYline || line)}"></label>` : ""}
+    <label>Bet size $<input inputmode="decimal" data-ed-stake value="${esc(d.plYstake || d.plStake)}"></label>
     <button data-ed-save>Save</button><button class="g" data-ed-cancel>Cancel</button></div>`);
 }
 const bhOdds = (v) => { const n = parseFloat(String(v).replace(/[^\d.+-]/g, "")); if (!n || Math.abs(n) < 100) return null; return (n > 0 ? "+" : "") + Math.round(n); };
 const bhPpu = (o) => { const n = parseFloat(o); return !n ? null : n > 0 ? n / 100 : 100 / Math.abs(n); };
 // one pick line → placed (with your terms) or not placed; dollars filled in right away when the pick is already graded
 // at the same line; a different line on a graded pick waits for the grader ("yours: pending")
-function bhPlacedLine(l, on, odds, line) {
+function bhPlacedLine(l, on, odds, line, stakeIn) {
   const p = l.split(" | "), logged = (p[2] || "").trim().split(" ")[0], cl = bhLineOf(p[1] || "");
   l = l.replace(/,\s*yours:\s*(?:pending|(?:W|L|P|Push)\b\s*[+-]?\$?[\d.,]*)/i, "").replace(/(result:[^|]*?\d+(?:\.\d+)?u),\s*[+-]\$[\d.,]+/i, "$1").replace(/\s*\(not placed, no \$\)/i, "").replace(/\s*\(see slip\)/i, "");
   const graded = ((l.match(/result:\s*(W|L|P|Push)\b/i) || [])[1] || "").toUpperCase().slice(0, 1), st = l.match(/(\d+(?:\.\d+)?)u \(\$(\d+(?:\.\d+)?)/), stake = st ? +st[2] : null;
@@ -334,18 +335,19 @@ function bhPlacedLine(l, on, odds, line) {
       if (v !== parseFloat(cl)) yl = total ? String(v) : (v > 0 ? "+" : "") + v; }
   }
   const yo = odds && bhOdds(odds) && parseFloat(bhOdds(odds)) !== parseFloat(logged) ? bhOdds(odds) : null;
-  const parts = [yl ? "your line " + yl : "", yo ? "your odds " + yo : ""].filter(Boolean);
+  const sn = parseFloat(String(stakeIn ?? "").replace(/[^\d.]/g, "")), ys = sn > 0 && Math.abs(sn - (stake ?? -1)) > 0.004 ? Math.round(sn * 100) / 100 : null;
+  const parts = [yl ? "your line " + yl : "", yo ? "your odds " + yo : "", ys ? "your stake $" + ys.toFixed(2) : ""].filter(Boolean);
   l = l.replace(/placed:\s*(not yet|yes|slip|no)(\s*\([^)]*\))?/i, "placed: yes" + (parts.length ? ` (${parts.join(", ")})` : ""));
   if (graded && stake !== null) {
     if (yl) return addMoney(", yours: pending");
-    const per = bhPpu(yo || logged), d = graded === "W" ? stake * per : graded === "L" ? -stake : 0;
-    return addMoney((yo ? `, yours: ${graded} ` : ", ") + fmtD(d));
+    const s$ = ys ?? stake, per = bhPpu(yo || logged), d = graded === "W" ? s$ * per : graded === "L" ? -s$ : 0;
+    return addMoney((yo || ys ? `, yours: ${graded} ` : ", ") + fmtD(d));
   }
   return l;
 }
 const bhPickIndex = (lines, d) => lines.findIndex(l => { const p = l.split(" | ").map(x => x.trim()); return p[0] === d.plDate && p[1] && p[1].replace(/^PARLAY:\s*/i, "") === d.plBet && /^PARLAY:/i.test(p[1]) === !!d.plParlay; });
 // picks older than 4 days live in the weekly "Personal: picks archive – week of …" events, so look there too
-async function bhSetPlaced(d, on, odds, line) {
+async function bhSetPlaced(d, on, odds, line, stake) {
   const log = await bhLiveLog(); if (!log) throw new Error("no picks log");
   let ev = log, lines = String(log.description || "").split("\n"), i = bhPickIndex(lines, d);
   if (i < 0) for (const a of (typeof ARCHIVES !== "undefined" ? ARCHIVES : [])) {
@@ -355,7 +357,7 @@ async function bhSetPlaced(d, on, odds, line) {
     a.description = e.description; lines = e.description.split("\n"); i = bhPickIndex(lines, d); ev = a; if (i >= 0) break;
   }
   if (i < 0) throw new Error("couldn't find that pick in the log or its archives");
-  lines[i] = bhPlacedLine(lines[i], on, odds, line); const description = lines.join("\n");
+  lines[i] = bhPlacedLine(lines[i], on, odds, line, stake); const description = lines.join("\n");
   await updateEvent(ev.id, { description }); ev.description = description;
 }
 const bhAfter = async (msg) => { toast(msg); await bhLoad().catch(() => {}); BH.redraw?.(); try { TABS.bets(); } catch {} };
@@ -381,10 +383,11 @@ document.addEventListener("click", async (e) => {
   if (t.closest?.("[data-ed-cancel]")) { e.preventDefault(); e.stopPropagation(); t.closest(".bh-ed").remove(); return; }
   if (t.closest?.("[data-ed-save]")) {
     e.preventDefault(); e.stopPropagation();
-    const ed = t.closest(".bh-ed"), box = ed.previousElementSibling, odds = ed.querySelector("[data-ed-odds]")?.value, line = ed.querySelector("[data-ed-line]")?.value;
+    const ed = t.closest(".bh-ed"), box = ed.previousElementSibling, odds = ed.querySelector("[data-ed-odds]")?.value, line = ed.querySelector("[data-ed-line]")?.value, stake = ed.querySelector("[data-ed-stake]")?.value;
     if (odds && !bhOdds(odds)) { toast("Odds like -110 or +125"); return; }
+    if (stake && !(parseFloat(String(stake).replace(/[^\d.]/g, "")) > 0)) { toast("Bet size like 2.50"); return; }
     t.disabled = true; t.textContent = "Saving…";
-    try { await bhSetPlaced(box.dataset, true, odds, line); await bhAfter("Marked placed – it counts in your placed bankroll."); }
+    try { await bhSetPlaced(box.dataset, true, odds, line, stake); await bhAfter("Marked placed – it counts in your placed bankroll."); }
     catch (x) { t.disabled = false; t.textContent = "Save"; toast("Couldn't save: " + (x?.message || x)); }
   }
 }, true);
