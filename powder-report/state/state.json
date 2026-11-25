@@ -854,7 +854,7 @@
  "lastReport": "2026-11-24",
  "base": {
   "v": 2,
-  "at": 1795554665730,
+  "at": 1795565507855,
   "by": {
    "Winter Park": {
     "base": 18,
@@ -878,12 +878,12 @@
     "url": "https://www.skiresort.info/ski-resort/eldora-mountain-resort/snow-report/"
    },
    "Steamboat": {
-    "asOf": "23 Nov 2026",
+    "asOf": "24 Nov 2026",
     "closed": true,
     "url": "https://www.skiresort.info/ski-resort/steamboat/snow-report/"
    },
    "Aspen Snowmass": {
-    "asOf": "23 Nov 2026",
+    "asOf": "24 Nov 2026",
     "closed": true,
     "url": "https://www.skiresort.info/ski-resort/snowmass/snow-report/"
    }
