@@ -18,7 +18,12 @@
   "39.43,-107.339": "https://api.weather.gov/gridpoints/GJT/139,114",
   "39.6845,-105.518": "https://api.weather.gov/gridpoints/BOU/44,60"
  },
- "alerts": {},
+ "alerts": {
+  "2026-11-28": {
+   "in": 9.283333333333337,
+   "at": "2026-11-26T18:58:49.170Z"
+  }
+ },
  "powderDays": {},
  "snotel": {
   "at": 1794001846721,
